@@ -1,0 +1,23 @@
+{
+  "name": "lending-marketplace",
+  "version": "1.0.0",
+  "description": "Peer-to-peer lending marketplace for UNZA and Zambian university students with collateral support",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm start",
+    "backend-only": "cd backend && npm run dev",
+    "frontend-only": "cd frontend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "prod": "concurrently \"npm run backend-prod\" \"npm run frontend-prod\"",
+    "backend-prod": "cd backend && npm start",
+    "frontend-prod": "cd frontend && npm run build && serve -s build -l 3000"
+  },
+  "keywords": ["lending", "marketplace", "collateral"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}

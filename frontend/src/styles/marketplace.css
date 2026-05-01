@@ -1,0 +1,196 @@
+.marketplace {
+  padding: 2rem 0;
+}
+
+.marketplace h2 {
+  margin-bottom: 2rem;
+  color: var(--gray-900);
+}
+
+.marketplace-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.tab {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  color: var(--gray-500);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.filters-card {
+  margin-bottom: 2rem;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.filter-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-grid label {
+  font-weight: 500;
+  color: var(--gray-700);
+  font-size: 0.9rem;
+}
+
+.loans-grid,
+.lenders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.loan-card-market,
+.lender-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.loan-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loan-status h4 {
+  color: var(--gray-900);
+}
+
+.loan-amount-market {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
+}
+
+.loan-amount-market .label {
+  color: var(--gray-500);
+  font-size: 0.85rem;
+}
+
+.loan-amount-market .amount {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.loan-terms,
+.borrower-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.borrower-info {
+  grid-template-columns: 1fr;
+}
+
+.loan-terms > div .label,
+.borrower-info .label,
+.loan-collateral .label {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 0.25rem;
+}
+
+.loan-terms > div .value,
+.borrower-info > p:not(.label) {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.loan-collateral {
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.borrower-info small {
+  color: var(--gray-500);
+  font-size: 0.85rem;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.lender-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.lender-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.lender-header h4 {
+  color: var(--gray-900);
+  margin-bottom: 0.25rem;
+}
+
+.verified {
+  color: var(--success-color);
+  font-size: 0.85rem;
+}
+
+.lender-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat .label {
+  color: var(--gray-500);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.lender-bio {
+  color: var(--gray-500);
+  font-size: 0.9rem;
+}

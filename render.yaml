@@ -1,0 +1,39 @@
+services:
+  # Backend API
+  - type: web
+    name: lending-marketplace-api
+    runtime: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        value: https://lending-marketplace-ui.onrender.com
+    
+  # Frontend
+  - type: web
+    name: lending-marketplace-ui
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://lending-marketplace-api.onrender.com/api
+      - key: PORT
+        value: 3000
+    routes:
+      - path: /
+        destination: lending-marketplace-ui
+  
+  # MongoDB (if using MongoDB Atlas, this section can be removed)
+  - type: pserv
+    name: mongodb
+    runtime: python
+    startCommand: echo "Use MongoDB Atlas instead"

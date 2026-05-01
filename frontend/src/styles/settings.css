@@ -1,0 +1,39 @@
+.settings-page {
+  padding: 2rem 0;
+}
+
+.settings-card {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.settings-subtitle {
+  color: var(--gray-500);
+  margin-bottom: 1.5rem;
+}
+
+.settings-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.settings-item h3 {
+  margin-bottom: 0.5rem;
+}
+
+.settings-item p {
+  margin: 0;
+  color: var(--gray-600);
+}
+
+.btn-block {
+  width: 100%;
+}
