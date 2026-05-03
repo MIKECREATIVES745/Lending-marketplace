@@ -1,5 +1,5 @@
 services:
-  # Backend API
+  # Backend API (only - frontend will be on Vercel)
   - type: web
     name: lending-marketplace-api
     runtime: node
@@ -15,22 +15,7 @@ services:
       - key: PORT
         value: 10000
       - key: FRONTEND_URL
-        value: https://lending-marketplace-ui.onrender.com
-    
-  # Frontend
-  - type: web
-    name: lending-marketplace-ui
-    runtime: node
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm start
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://lending-marketplace-api.onrender.com/api
-      - key: PORT
-        value: 3000
-    routes:
-      - path: /
-        destination: lending-marketplace-ui
+        sync: false  # Will be set to Vercel URL after deployment
   
   # MongoDB (if using MongoDB Atlas, this section can be removed)
   - type: pserv
