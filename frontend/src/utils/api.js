@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -49,9 +49,30 @@ export const marketplaceAPI = {
 
 // Collateral APIs
 export const collateralAPI = {
-  addCollateral: (data) => api.post('/collateral', data),
+  addCollateral: (data) => {
+    // If files are included, use FormData
+    if (data instanceof FormData) {
+      return api.post('/collateral', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    }
+    return api.post('/collateral', data);
+  },
   getUserCollateral: (userId) => api.get(`/collateral/user/${userId}`),
-  updateCollateral: (collateralId, data) => api.put(`/collateral/${collateralId}`, data),
+  getCollateral: (collateralId) => api.get(`/collateral/${collateralId}`),
+  updateCollateral: (collateralId, data) => {
+    // If files are included, use FormData
+    if (data instanceof FormData) {
+      return api.put(`/collateral/${collateralId}`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    }
+    return api.put(`/collateral/${collateralId}`, data);
+  },
   deleteCollateral: (collateralId) => api.delete(`/collateral/${collateralId}`)
 };
 
