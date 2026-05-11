@@ -6,6 +6,7 @@ import Marketplace from './components/Marketplace';
 import Chat from './components/Chat';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
+import CollateralUpload from './components/CollateralUpload';
 import BottomNav from './components/BottomNav';
 import './styles/index.css';
 
@@ -43,6 +44,7 @@ function App() {
         {currentPage === 'dashboard' && <Dashboard currentUser={currentUser} />}
         {currentPage === 'marketplace' && <Marketplace currentUser={currentUser} />}
         {currentPage === 'loans' && <Dashboard currentUser={currentUser} />}
+        {currentPage === 'collateral' && <CollateralUpload currentUser={currentUser} />}
         {currentPage === 'chat' && <Chat currentUser={currentUser} />}
         {currentPage === 'profile' && (
           <Profile

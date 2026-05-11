@@ -1,4 +1,4 @@
-{
+{"proxy": "http://localhost:5000",
   "name": "lending-marketplace",
   "version": "1.0.0",
   "description": "Peer-to-peer lending marketplace for UNZA and Zambian university students with collateral support",
@@ -14,10 +14,17 @@
     "backend-prod": "cd backend && npm start",
     "frontend-prod": "cd frontend && npm run build && serve -s build -l 3000"
   },
-  "keywords": ["lending", "marketplace", "collateral"],
+  "keywords": [
+    "lending",
+    "marketplace",
+    "collateral"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "mongod": "^2.0.0"
   }
 }

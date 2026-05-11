@@ -26,6 +26,13 @@ const BottomNav = ({ currentPage, setCurrentPage }) => {
         <span className="nav-label">Loans</span>
       </button>
       <button 
+        className={`nav-item ${currentPage === 'collateral' ? 'active' : ''}`}
+        onClick={() => setCurrentPage('collateral')}
+      >
+        <span className="nav-icon">📦</span>
+        <span className="nav-label">Collateral</span>
+      </button>
+      <button 
         className={`nav-item ${currentPage === 'chat' ? 'active' : ''}`}
         onClick={() => setCurrentPage('chat')}
       >

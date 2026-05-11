@@ -1,5 +1,5 @@
 services:
-  # Backend API (only - frontend will be on Vercel)
+  # Backend API
   - type: web
     name: lending-marketplace-api
     runtime: node
@@ -15,10 +15,4 @@ services:
       - key: PORT
         value: 10000
       - key: FRONTEND_URL
-        sync: false  # Will be set to Vercel URL after deployment
-  
-  # MongoDB (if using MongoDB Atlas, this section can be removed)
-  - type: pserv
-    name: mongodb
-    runtime: python
-    startCommand: echo "Use MongoDB Atlas instead"
+        sync: false

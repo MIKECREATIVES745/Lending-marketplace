@@ -30,6 +30,19 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
+      // Validate inputs
+      if (!formData.email || !formData.password) {
+        setError('Email and password are required');
+        setLoading(false);
+        return;
+      }
+
+      if (!isLogin && (!formData.firstName || !formData.lastName)) {
+        setError('First name and last name are required');
+        setLoading(false);
+        return;
+      }
+
       const response = isLogin
         ? await authAPI.login({ email: formData.email, password: formData.password })
         : await authAPI.register(formData);
@@ -38,7 +51,19 @@ const Login = ({ onLoginSuccess }) => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       onLoginSuccess(response.data.user);
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred');
+      const errorMessage = err.response?.data?.error || err.message || 'An error occurred';
+      console.error('Auth error:', errorMessage);
+      
+      // Provide helpful error messages
+      if (errorMessage.includes('connect ECONNREFUSED') || errorMessage.includes('buffering timed out')) {
+        setError('Server connection failed. Please make sure the backend is running.');
+      } else if (errorMessage.includes('Invalid credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (errorMessage.includes('User already exists')) {
+        setError('This email is already registered. Please sign in instead.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
