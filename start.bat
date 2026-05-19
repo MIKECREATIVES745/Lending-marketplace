@@ -1,5 +1,5 @@
 @echo off
-REM Creative Lending Marketplace - Smart Startup Script
+REM Smart Money - Smart Startup Script
 
 setlocal enabledelayedexpansion
 color 0A
@@ -7,7 +7,7 @@ cls
 
 echo.
 echo ====================================================================
-echo        Creative Lending Marketplace - Smart Startup Script
+echo        Smart Money - Smart Startup Script
 echo ====================================================================
 echo.
 

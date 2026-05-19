@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { marketplaceAPI } from '../utils/api';
 import '../styles/marketplace.css';
 
@@ -12,31 +12,31 @@ const Marketplace = ({ currentUser }) => {
     interestRate: ''
   });
 
-  useEffect(() => {
-    if (activeTab === 'loans') {
-      fetchLoans();
-    } else {
-      fetchLenders();
-    }
-  }, [activeTab, filters]);
-
-  const fetchLoans = async () => {
+  const fetchLoans = useCallback(async () => {
     try {
       const res = await marketplaceAPI.getAvailableLoans(filters);
       setLoans(res.data);
     } catch (error) {
       console.error('Error fetching loans:', error);
     }
-  };
+  }, [filters]);
 
-  const fetchLenders = async () => {
+  const fetchLenders = useCallback(async () => {
     try {
       const res = await marketplaceAPI.getAvailableLenders();
       setLenders(res.data);
     } catch (error) {
       console.error('Error fetching lenders:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'loans') {
+      fetchLoans();
+    } else {
+      fetchLenders();
+    }
+  }, [activeTab, fetchLoans, fetchLenders]);
 
   return (
     <div className="marketplace">

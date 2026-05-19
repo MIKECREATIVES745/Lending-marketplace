@@ -50,10 +50,17 @@ app.use('/api/loans', require('./routes/loans'));
 app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api/collateral', require('./routes/collateral'));
 app.use('/api/chat', require('./routes/chat'));
+app.use('/api/gigs', require('./routes/gigs'));
 
-// Socket.io for real-time chat
+// Socket.io for real-time chat and notifications
 io.on('connection', (socket) => {
   console.log('✓ User connected:', socket.id);
+
+  // Join a private room based on user ID for notifications
+  socket.on('join-user-room', (userId) => {
+    socket.join(userId);
+    console.log(`✓ User ${userId} joined their private room`);
+  });
 
   socket.on('join-room', (roomId) => {
     socket.join(roomId);

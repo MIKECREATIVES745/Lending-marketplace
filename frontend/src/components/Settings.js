@@ -8,7 +8,7 @@ const defaultSettings = {
   darkMode: false
 };
 
-const Settings = ({ currentUser }) => {
+const Settings = ({ currentUser, onSettingsUpdate }) => {
   const [settings, setSettings] = useState(defaultSettings);
   const [message, setMessage] = useState('');
 
@@ -29,6 +29,7 @@ const Settings = ({ currentUser }) => {
   const handleSave = () => {
     localStorage.setItem('appSettings', JSON.stringify(settings));
     setMessage('Settings saved successfully.');
+    if (onSettingsUpdate) onSettingsUpdate();
     setTimeout(() => setMessage(''), 3000);
   };
 

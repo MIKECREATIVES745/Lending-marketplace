@@ -28,6 +28,18 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get gig workers
+router.get('/workers/list', async (req, res) => {
+  try {
+    const workers = await User.find({
+      isGigWorker: true
+    }).select('-password -bankDetails');
+    res.json(workers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update user profile
 router.put('/:id', async (req, res) => {
   try {

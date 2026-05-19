@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const sendEmail = require('../utils/email');
 const router = express.Router();
 
 // Register
@@ -13,8 +14,11 @@ router.post('/register', async (req, res) => {
     if (user) {
       return res.status(400).json({ error: 'User already exists' });
     }
-    
-    // Create new user
+
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Create new user (initially unverified)
     user = new User({
       firstName,
       lastName,
@@ -23,9 +27,70 @@ router.post('/register', async (req, res) => {
       userType: userType || 'both',
       phone,
       programOfStudy,
-      computerNumber
+      computerNumber,
+      emailVerificationCode: verificationCode,
+      emailVerificationExpires: Date.now() + 3600000 // 1 hour
     });
-    
+
+    await user.save();
+
+    // Send verification email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Verify your Smart Money account',
+        message: `Your verification code is: ${verificationCode}. It expires in 1 hour.`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+            <h2 style="color: #5B21B6;">Welcome to Smart Money!</h2>
+            <p>Hi ${firstName},</p>
+            <p>Thank you for joining our platform. Please use the following 6-digit code to verify your email address:</p>
+            <div style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #5B21B6; margin: 20px 0;">
+              ${verificationCode}
+            </div>
+            <p>This code will expire in 1 hour.</p>
+            <p>If you didn't sign up for Smart Money, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            <p style="font-size: 12px; color: #666;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      // We don't return error here because the user is still created in DB
+      // In production, you might want to handle this differently
+    }
+
+    console.log(`[Verification] Code for ${email}: ${verificationCode}`);
+
+    res.json({
+      message: 'Registration initiated. Please verify your email.',
+      email: user.email,
+      needsVerification: true
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Verify Email
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await User.findOne({
+      email,
+      emailVerificationCode: code,
+      emailVerificationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationCode = undefined;
+    user.emailVerificationExpires = undefined;
     await user.save();
     
     // Generate token
@@ -42,11 +107,8 @@ router.post('/register', async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
-        programOfStudy: user.programOfStudy,
-        computerNumber: user.computerNumber,
         userType: user.userType,
-        creditScore: user.creditScore
+        isEmailVerified: true
       }
     });
   } catch (error) {
@@ -61,12 +123,21 @@ router.post('/login', async (req, res) => {
     
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
     
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check if email is verified
+    if (!user.isEmailVerified && user.emailVerificationCode) {
+      return res.status(403).json({
+        error: 'Email not verified',
+        needsVerification: true,
+        email: user.email
+      });
     }
     
     const token = jwt.sign(
@@ -86,7 +157,8 @@ router.post('/login', async (req, res) => {
         programOfStudy: user.programOfStudy,
         computerNumber: user.computerNumber,
         creditScore: user.creditScore,
-        userType: user.userType
+        userType: user.userType,
+        isEmailVerified: user.isEmailVerified
       }
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { collateralAPI } from '../utils/api';
 import '../styles/collateral.css';
 
@@ -17,14 +17,7 @@ const CollateralUpload = ({ currentUser }) => {
     condition: 'good'
   });
 
-  // Load user's collateral
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadCollateral();
-    }
-  }, [currentUser?.id]);
-
-  const loadCollateral = async () => {
+  const loadCollateral = useCallback(async () => {
     try {
       const response = await collateralAPI.getUserCollateral(currentUser.id);
       setCollateralItems(response.data);
@@ -32,7 +25,14 @@ const CollateralUpload = ({ currentUser }) => {
       console.error('Error loading collateral:', err);
       setError('Failed to load collateral items');
     }
-  };
+  }, [currentUser?.id]);
+
+  // Load user's collateral
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadCollateral();
+    }
+  }, [currentUser?.id, loadCollateral]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;

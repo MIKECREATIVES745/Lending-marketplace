@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/bottom-nav.css';
 
-const BottomNav = ({ currentPage, setCurrentPage }) => {
+const BottomNav = ({ currentPage, setCurrentPage, onLogout }) => {
   return (
     <nav className="bottom-nav">
       <button 
@@ -17,6 +17,13 @@ const BottomNav = ({ currentPage, setCurrentPage }) => {
       >
         <span className="nav-icon">🏪</span>
         <span className="nav-label">Market</span>
+      </button>
+      <button
+        className={`nav-item ${currentPage === 'gigs' ? 'active' : ''}`}
+        onClick={() => setCurrentPage('gigs')}
+      >
+        <span className="nav-icon">🎯</span>
+        <span className="nav-label">Gig Scout</span>
       </button>
       <button 
         className={`nav-item ${currentPage === 'loans' ? 'active' : ''}`}
@@ -52,6 +59,13 @@ const BottomNav = ({ currentPage, setCurrentPage }) => {
       >
         <span className="nav-icon">⚙️</span>
         <span className="nav-label">Settings</span>
+      </button>
+      <button
+        className="nav-item logout-item"
+        onClick={onLogout}
+      >
+        <span className="nav-icon">🚪</span>
+        <span className="nav-label">Logout</span>
       </button>
     </nav>
   );

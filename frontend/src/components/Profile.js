@@ -3,7 +3,6 @@ import { userAPI } from '../utils/api';
 import '../styles/auth.css';
 
 const Profile = ({ currentUser, onProfileUpdate }) => {
-  const [profile, setProfile] = useState(null);
   const [formState, setFormState] = useState({
     firstName: '',
     lastName: '',
@@ -24,7 +23,6 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
       setLoading(true);
       try {
         const res = await userAPI.getProfile(userId);
-        setProfile(res.data);
         setFormState({
           firstName: res.data.firstName || '',
           lastName: res.data.lastName || '',
@@ -64,7 +62,6 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
         programOfStudy: formState.programOfStudy,
         computerNumber: formState.computerNumber
       });
-      setProfile(res.data);
       onProfileUpdate({
         ...currentUser,
         firstName: res.data.firstName,

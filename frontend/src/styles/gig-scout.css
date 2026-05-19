@@ -1,0 +1,232 @@
+.gig-scout-page {
+  background-color: var(--gray-50);
+  min-height: 100vh;
+}
+
+.gig-map-container {
+  position: relative;
+  z-index: 1;
+}
+
+.map-popup h4 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+}
+
+.map-popup p {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.gig-dot { background-color: #6d28d9; }
+.worker-dot { background-color: #06b6d4; }
+
+/* Job Board Section */
+.job-board {
+  background: white;
+  border-radius: 30px 30px 0 0;
+  margin-top: -30px;
+  position: relative;
+  z-index: 10;
+  padding: 20px;
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
+}
+
+.handle-bar {
+  width: 40px;
+  height: 5px;
+  background: var(--gray-200);
+  border-radius: 10px;
+  margin: 0 auto 20px;
+}
+
+.job-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--gray-100);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.toggle-btn {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: white;
+  color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.job-item {
+  margin-bottom: 15px;
+}
+
+.worker-item .job-main {
+  align-items: center;
+  gap: 15px;
+}
+
+.worker-avatar {
+  width: 60px;
+  height: 60px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.worker-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worker-skills {
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.worker-bio {
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.worker-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+}
+
+.rating { color: #f59e0b; font-weight: 600; }
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+}
+
+body.dark-mode .job-board,
+body.dark-mode .map-legend {
+  background-color: var(--gray-100);
+  color: white;
+}
+
+body.dark-mode .modal-content {
+  background-color: var(--gray-100);
+  color: white;
+}
+
+.gig-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dashboard-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.applicant-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .applicant-item {
+  background: #2a2a2a;
+}
+
+.job-status {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.job-status.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.job-status.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+.status-actions {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
+}
+
+body.dark-mode .status-actions {
+  border-top-color: #333;
+}

@@ -1,27 +1,21 @@
 import React, { useState } from 'react';
 import '../styles/navbar.css';
 
-const Navbar = ({ currentUser, setCurrentPage }) => {
+const Navbar = ({ currentUser, setCurrentPage, notifications, onLogout }) => {
   const [showMenu, setShowMenu] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/';
-  };
 
   return (
     <nav className="navbar">
       <div className="container navbar-container">
         <div className="navbar-brand">
-          <h1>💰 Creative Lending Store</h1>
+          <h1>💰 Smart Money</h1>
         </div>
         
         {currentUser && (
           <div className="navbar-menu">
             <button className="notification-btn">
               🔔
-              <span className="notification-badge">3</span>
+              {notifications > 0 && <span className="notification-badge">{notifications}</span>}
             </button>
             <div className="user-menu">
               <button className="user-btn" onClick={() => setShowMenu(!showMenu)}>
@@ -30,9 +24,9 @@ const Navbar = ({ currentUser, setCurrentPage }) => {
               </button>
               {showMenu && (
                 <div className="dropdown-menu">
-                      <button type="button" onClick={() => { setShowMenu(false); setCurrentPage('profile'); }}>👤 Profile</button>
+                  <button type="button" onClick={() => { setShowMenu(false); setCurrentPage('profile'); }}>👤 Profile</button>
                   <button type="button" onClick={() => { setShowMenu(false); setCurrentPage('settings'); }}>⚙️ Settings</button>
-                  <button type="button" onClick={handleLogout}>🚪 Logout</button>
+                  <button type="button" onClick={onLogout}>🚪 Logout</button>
                 </div>
               )}
             </div>

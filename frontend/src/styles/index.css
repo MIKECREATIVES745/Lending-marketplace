@@ -123,6 +123,12 @@ input:focus, textarea:focus, select:focus {
   background-color: var(--primary-light);
 }
 
+.btn-small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+}
+
 .btn-secondary {
   background-color: var(--secondary-color);
   color: white;
@@ -171,9 +177,10 @@ input:focus, textarea:focus, select:focus {
   color: var(--danger-color);
 }
 
-.text-center {
-  text-align: center;
-}
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-danger { color: var(--danger-color); }
+.text-muted { color: var(--gray-500); }
 
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
@@ -216,15 +223,97 @@ input:focus, textarea:focus, select:focus {
 .app-footer {
   background: white;
   border-top: 1px solid var(--gray-200);
-  padding: 1rem 0;
+  padding: 2rem 0;
   text-align: center;
   color: var(--gray-500);
   font-size: 0.95rem;
 }
 
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  color: var(--gray-200);
+}
+
 .app-footer a {
   color: var(--primary-color);
   text-decoration: none;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+  --gray-50: #121212;
+  --gray-100: #1e1e1e;
+  --gray-200: #333333;
+  --gray-700: #e0e0e0;
+  --gray-900: #ffffff;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+}
+
+body.dark-mode .card,
+body.dark-mode .navbar,
+body.dark-mode .bottom-nav,
+body.dark-mode .app-footer,
+body.dark-mode .dropdown-menu {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+  border-color: var(--gray-200);
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background-color: #2a2a2a;
+  color: white;
+  border-color: var(--gray-200);
+}
+
+body.dark-mode .text-muted {
+  color: #b0b0b0;
+}
+
+.notification-banner {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  animation: slideDown 0.3s ease-out;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
 }
 
 @media (min-width: 768px) {

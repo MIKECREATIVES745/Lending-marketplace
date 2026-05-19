@@ -1,5 +1,7 @@
 ﻿# Lending Marketplace - Hybrid Deployment Guide
 
+
+
 This guide helps deploy the Lending Marketplace using a **hybrid approach**:
 - **Frontend**: Deploy to Vercel
 - **Backend**: Deploy to Render

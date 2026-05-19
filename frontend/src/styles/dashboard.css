@@ -3,27 +3,32 @@
 }
 
 .loan-card {
-  padding: 2rem;
+  padding: 1.5rem;
   color: white;
   margin-bottom: 2rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
 }
 
 .loan-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .loan-card-header h3 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   opacity: 0.9;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  text-transform: none;
 }
 
 .balance {
-  font-size: 2.5rem;
-  font-weight: bold;
+  font-size: 2.2rem;
+  font-weight: 700;
 }
 
 .payment-period {
@@ -31,52 +36,130 @@
 }
 
 .payment-period p:first-child {
-  font-size: 0.9rem;
-  opacity: 0.9;
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .period-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.loan-card-details {
-  margin-top: 1.5rem;
-}
-
-.detail-item {
-  margin-bottom: 1rem;
-}
-
-.detail-item label {
-  display: block;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .health-bar {
-  height: 8px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 0.5rem;
+  margin: 10px 0;
 }
 
 .health-fill {
   height: 100%;
   background: linear-gradient(90deg, #10B981, #FBBF24);
-  border-radius: 4px;
+}
+
+.health-text {
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .detail-row {
   display: flex;
-  gap: 2rem;
   justify-content: space-between;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
 }
 
-.detail-row .detail-item {
-  flex: 1;
+.detail-row .detail-item label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  display: block;
+}
+
+.detail-row .detail-item p {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Quick Gigs Section */
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.btn-link {
+  background: none;
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.quick-gigs-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  scrollbar-width: none; /* Firefox */
+}
+
+.quick-gigs-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.quick-gig-card {
+  min-width: 140px;
+  padding: 1rem;
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quick-gig-card h4 {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  height: 2.4rem;
+  overflow: hidden;
+}
+
+.q-category {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+.q-price {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.btn-white {
+  background: white;
+  color: #333;
+  padding: 0.4rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.quick-gig-card.category-academic { background: #3B82F6; }
+.quick-gig-card.category-design { background: #F59E0B; }
+.quick-gig-card.category-coding { background: #10B981; }
+.quick-gig-card.category-delivery { background: #8B5CF6; }
+.quick-gig-card.category-manual-labor { background: #F97316; }
+
+.quick-gig-card.empty {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border: 1px dashed var(--gray-200);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .eligibility-card {

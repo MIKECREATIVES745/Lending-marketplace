@@ -21,14 +21,16 @@ api.interceptors.request.use(config => {
 // Auth APIs
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials)
+  login: (credentials) => api.post('/auth/login', credentials),
+  verifyEmail: (data) => api.post('/auth/verify-email', data)
 };
 
 // User APIs
 export const userAPI = {
   getProfile: (userId) => api.get(`/users/${userId}`),
   updateProfile: (userId, data) => api.put(`/users/${userId}`, data),
-  getLenders: () => api.get('/users/lenders/list')
+  getLenders: () => api.get('/users/lenders/list'),
+  getGigWorkers: () => api.get('/users/workers/list')
 };
 
 // Loan APIs
@@ -37,7 +39,9 @@ export const loanAPI = {
   getUserLoans: (userId) => api.get(`/loans/user/${userId}`),
   getLoan: (loanId) => api.get(`/loans/${loanId}`),
   acceptLoan: (loanId, data) => api.put(`/loans/${loanId}/accept`, data),
-  recordPayment: (loanId, data) => api.post(`/loans/${loanId}/payment`, data)
+  recordPayment: (loanId, data) => api.post(`/loans/${loanId}/payment`, data),
+  getQRCode: (loanId) => api.get(`/loans/${loanId}/qrcode`),
+  verifyExchange: (loanId, code) => api.post(`/loans/${loanId}/verify-exchange`, { verificationCode: code })
 };
 
 // Marketplace APIs
@@ -82,6 +86,17 @@ export const chatAPI = {
   getMessages: (conversationId) => api.get(`/chat/messages/${conversationId}`),
   createConversation: (data) => api.post('/chat/conversation', data),
   sendMessage: (data) => api.post('/chat/message', data)
+};
+
+// Gig APIs
+export const gigAPI = {
+  getGigs: (category) => api.get('/gigs', { params: { category } }),
+  createGig: (data) => api.post('/gigs', data),
+  applyForGig: (gigId, data) => api.post(`/gigs/${gigId}/apply`, data),
+  getMyGigs: () => api.get('/gigs/my-posts'),
+  getMyJobs: () => api.get('/gigs/my-jobs'),
+  hireWorker: (gigId, workerId) => api.post(`/gigs/${gigId}/hire`, { workerId }),
+  confirmGig: (gigId) => api.post(`/gigs/${gigId}/confirm`)
 };
 
 export default api;

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { loanAPI, collateralAPI } from '../utils/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { loanAPI, collateralAPI, gigAPI } from '../utils/api';
 import '../styles/dashboard.css';
 
-const Dashboard = ({ currentUser }) => {
+const Dashboard = ({ currentUser, setCurrentPage }) => {
   const [loans, setLoans] = useState([]);
   const [stats, setStats] = useState({
     totalBalance: 0,
@@ -15,14 +15,18 @@ const Dashboard = ({ currentUser }) => {
   const [isChecking, setIsChecking] = useState(false);
   const userId = currentUser?.id || currentUser?._id;
 
-  useEffect(() => {
-    if (userId) {
-      fetchLoans();
-      fetchCollateral();
-    }
-  }, [userId]);
+  const [quickGigs, setQuickGigs] = useState([]);
 
-  const fetchLoans = async () => {
+  const fetchQuickGigs = useCallback(async () => {
+    try {
+      const res = await gigAPI.getGigs();
+      setQuickGigs(res.data.slice(0, 3));
+    } catch (error) {
+      console.error('Error fetching quick gigs:', error);
+    }
+  }, []);
+
+  const fetchLoans = useCallback(async () => {
     try {
       const res = await loanAPI.getUserLoans(userId);
       setLoans(res.data);
@@ -39,9 +43,9 @@ const Dashboard = ({ currentUser }) => {
     } catch (error) {
       console.error('Error fetching loans:', error);
     }
-  };
+  }, [userId]);
 
-  const fetchCollateral = async () => {
+  const fetchCollateral = useCallback(async () => {
     try {
       const res = await collateralAPI.getUserCollateral(userId);
       setCollateralItems(res.data);
@@ -54,7 +58,15 @@ const Dashboard = ({ currentUser }) => {
       console.warn('Unable to fetch collateral from server, using local state only', error);
       setCollateralItems([]);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchLoans();
+      fetchCollateral();
+      fetchQuickGigs();
+    }
+  }, [userId, fetchLoans, fetchCollateral, fetchQuickGigs]);
 
   const collateralOptions = [
     {
@@ -175,6 +187,57 @@ const Dashboard = ({ currentUser }) => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Quick Gigs Section */}
+        <div className="mt-4">
+          <div className="section-header-row">
+            <h3>Quick Gigs</h3>
+            <button className="btn-link" onClick={() => setCurrentPage('gigs')}>See All</button>
+          </div>
+          <div className="quick-gigs-scroll">
+            {quickGigs.length > 0 ? quickGigs.map(gig => (
+              <div key={gig._id} className={`quick-gig-card category-${gig.category}`}>
+                <span className="q-category">{gig.category}</span>
+                <h4>{gig.title}</h4>
+                <p className="q-price">ZMW {gig.budget}</p>
+                <button className="btn btn-white btn-sm" onClick={() => setCurrentPage('gigs')}>Apply Now</button>
+              </div>
+            )) : (
+              <>
+                <div className="quick-gig-card category-academic">
+                  <span className="q-category">On-Campus Tutor</span>
+                  <h4>Tutor (Computer Science)</h4>
+                  <p className="q-price">ZMW 350</p>
+                  <button className="btn btn-white btn-sm">Apply Now</button>
+                </div>
+                <div className="quick-gig-card category-design">
+                  <span className="q-category">Manual Labor</span>
+                  <h4>Manual Labor (Event Setup)</h4>
+                  <p className="q-price">ZMW 200</p>
+                  <button className="btn btn-white btn-sm">Apply Now</button>
+                </div>
+                <div className="quick-gig-card category-delivery">
+                  <span className="q-category">On-Campus Runner</span>
+                  <h4>Library Assistant</h4>
+                  <p className="q-price">ZMW 180</p>
+                  <button className="btn btn-white btn-sm">Apply Now</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Geofence Card */}
+        <div className="card geofence-card mt-3">
+          <div className="geofence-content">
+            <div className="geofence-icon">🔔</div>
+            <div className="geofence-info">
+              <h4>UNZA Campus Geofence</h4>
+              <p>Active (2km radius)</p>
+            </div>
+          </div>
+          <div className="geofence-map-mini"></div>
         </div>
 
         {/* Eligibility Section */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { chatAPI } from '../utils/api';
 import '../styles/chat.css';
 
@@ -8,33 +8,33 @@ const Chat = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
-  useEffect(() => {
-    fetchConversations();
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages();
-    }
-  }, [selectedConversation]);
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const res = await chatAPI.getConversations(currentUser?.id);
       setConversations(res.data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
-  };
+  }, [currentUser?.id]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const res = await chatAPI.getMessages(selectedConversation._id);
       setMessages(res.data);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
-  };
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages();
+    }
+  }, [selectedConversation, fetchMessages]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -55,28 +55,35 @@ const Chat = ({ currentUser }) => {
     }
   };
 
+  const getOtherParticipant = (conversation) => {
+    return conversation.participantIds.find(p => p._id !== (currentUser?.id || currentUser?._id)) || conversation.participantIds[0];
+  };
+
   return (
     <div className="chat-container">
       <div className="chat-sidebar">
         <h3>Messages</h3>
         <div className="conversations-list">
-          {conversations.map(conv => (
-            <div 
-              key={conv._id}
-              className={`conversation-item ${selectedConversation?._id === conv._id ? 'active' : ''}`}
-              onClick={() => setSelectedConversation(conv)}
-            >
-              <div className="conversation-avatar">
-                {conv.participantIds[0].firstName?.charAt(0)}
+          {conversations.map(conv => {
+            const otherUser = getOtherParticipant(conv);
+            return (
+              <div
+                key={conv._id}
+                className={`conversation-item ${selectedConversation?._id === conv._id ? 'active' : ''}`}
+                onClick={() => setSelectedConversation(conv)}
+              >
+                <div className="conversation-avatar">
+                  {otherUser.firstName?.charAt(0)}
+                </div>
+                <div className="conversation-info">
+                  <h4>{otherUser.firstName} {otherUser.lastName}</h4>
+                  <p className="last-message">
+                    {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleDateString() : 'No messages'}
+                  </p>
+                </div>
               </div>
-              <div className="conversation-info">
-                <h4>{conv.participantIds[0].firstName} {conv.participantIds[0].lastName}</h4>
-                <p className="last-message">
-                  {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleDateString() : 'No messages'}
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -85,7 +92,7 @@ const Chat = ({ currentUser }) => {
           <>
             <div className="chat-header">
               <h3>
-                {selectedConversation.participantIds[0].firstName} {selectedConversation.participantIds[0].lastName}
+                {getOtherParticipant(selectedConversation).firstName} {getOtherParticipant(selectedConversation).lastName}
               </h3>
             </div>
 

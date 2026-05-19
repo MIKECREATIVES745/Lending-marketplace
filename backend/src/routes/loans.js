@@ -103,7 +103,19 @@ router.put('/:id/accept', async (req, res) => {
       },
       { new: true }
     ).populate('borrowerId lenderId');
-    
+
+    // Emit notification to the borrower
+    const { io } = require('../index');
+    if (io) {
+      io.to(updatedLoan.borrowerId._id.toString()).emit('notification', {
+        type: 'LOAN_ACCEPTED',
+        title: 'Loan Request Accepted',
+        message: `Your loan request for K${updatedLoan.amount} has been accepted.`,
+        loanId: updatedLoan._id,
+        timestamp: new Date()
+      });
+    }
+
     res.json(updatedLoan);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -130,6 +142,19 @@ router.post('/:id/payment', async (req, res) => {
     }
     
     await loan.save();
+
+    // Emit notification to the lender
+    const { io } = require('../index');
+    if (io && loan.lenderId) {
+      io.to(loan.lenderId.toString()).emit('notification', {
+        type: 'PAYMENT_RECEIVED',
+        title: 'Payment Received',
+        message: `You received a payment of K${amount} for loan ${loan.loanId}.`,
+        loanId: loan._id,
+        timestamp: new Date()
+      });
+    }
+
     res.json(loan);
   } catch (error) {
     res.status(500).json({ error: error.message });

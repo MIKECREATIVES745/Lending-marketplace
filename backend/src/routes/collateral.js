@@ -1,6 +1,8 @@
 const express = require('express');
 const Collateral = require('../models/Collateral');
-const upload = require('../middleware/upload');
+const upload = process.env.CLOUDINARY_CLOUD_NAME
+  ? require('../middleware/cloudinary')
+  : require('../middleware/upload');
 const router = express.Router();
 
 // Add collateral with file uploads
@@ -14,7 +16,7 @@ router.post('/', upload.array('files', 10), async (req, res) => {
     
     if (req.files) {
       req.files.forEach(file => {
-        const fileUrl = `/uploads/${file.filename}`;
+        const fileUrl = file.path || `/uploads/${file.filename}`;
         const ext = file.originalname.split('.').pop().toLowerCase();
         
         // Categorize as image or document
@@ -84,7 +86,7 @@ router.put('/:id', upload.array('files', 10), async (req, res) => {
     // Handle new file uploads
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
-        const fileUrl = `/uploads/${file.filename}`;
+        const fileUrl = file.path || `/uploads/${file.filename}`;
         const ext = file.originalname.split('.').pop().toLowerCase();
         
         if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import QRCodeReact from 'qrcode.react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { loanAPI } from '../utils/api';
 import '../styles/qrcode.css';
 
@@ -10,47 +9,33 @@ function QRCodeComponent({ loanId, currentUser }) {
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchLoanQRCode();
-  }, [loanId]);
-
-  const fetchLoanQRCode = async () => {
+  const fetchLoanQRCode = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/loans/${loanId}/qrcode`);
-      const data = await response.json();
-      if (response.ok) {
-        setLoan(data);
-        setVerified(data.exchangeVerified);
-      } else {
-        setError(data.error || 'Failed to load QR code');
-      }
+      const response = await loanAPI.getQRCode(loanId);
+      const data = response.data;
+      setLoan(data);
+      setVerified(data.exchangeVerified);
     } catch (err) {
-      setError('Error loading QR code: ' + err.message);
+      setError(err.response?.data?.error || 'Error loading QR code');
     } finally {
       setLoading(false);
     }
-  };
+  }, [loanId]);
+
+  useEffect(() => {
+    fetchLoanQRCode();
+  }, [fetchLoanQRCode]);
 
   const handleVerifyExchange = async () => {
     try {
       setError('');
-      const response = await fetch(`http://localhost:5000/api/loans/${loanId}/verify-exchange`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verificationCode })
-      });
-      
-      const data = await response.json();
-      if (response.ok) {
-        setVerified(true);
-        setVerificationCode('');
-        alert('Exchange verified successfully!');
-        fetchLoanQRCode();
-      } else {
-        setError(data.error || 'Verification failed');
-      }
+      await loanAPI.verifyExchange(loanId, verificationCode);
+      setVerified(true);
+      setVerificationCode('');
+      alert('Exchange verified successfully!');
+      fetchLoanQRCode();
     } catch (err) {
-      setError('Error verifying: ' + err.message);
+      setError(err.response?.data?.error || 'Verification failed');
     }
   };
 
