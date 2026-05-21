@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { authAPI } from '../utils/api';
+import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
 import '../styles/auth.css';
 
 const Login = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -116,6 +121,40 @@ const Login = ({ onLoginSuccess }) => {
     );
   }
 
+  if (showForgotPassword) {
+    return (
+      <div className="auth-container">
+        <ForgotPassword
+          onBack={() => setShowForgotPassword(false)}
+          onResetInitiated={(email) => {
+            setResetEmail(email);
+            setShowForgotPassword(false);
+            setShowResetPassword(true);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (showResetPassword) {
+    return (
+      <div className="auth-container">
+        <ResetPassword
+          email={resetEmail}
+          onBack={() => {
+            setShowResetPassword(false);
+            setShowForgotPassword(false);
+          }}
+          onResetSuccess={(email) => {
+            setShowResetPassword(false);
+            setFormData({ ...formData, email, password: '' });
+            setIsLogin(true);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -162,6 +201,16 @@ const Login = ({ onLoginSuccess }) => {
           <div className="form-group">
             <label>Password</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+            {isLogin && (
+              <button
+                type="button"
+                className="btn-link"
+                style={{ fontSize: '12px', marginTop: '5px', textAlign: 'right', display: 'block' }}
+                onClick={() => setShowForgotPassword(true)}
+              >
+                Forgot password?
+              </button>
+            )}
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>

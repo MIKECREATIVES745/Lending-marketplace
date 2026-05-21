@@ -22,8 +22,8 @@ const BottomNav = ({ currentPage, setCurrentPage, onLogout }) => {
         className={`nav-item ${currentPage === 'gigs' ? 'active' : ''}`}
         onClick={() => setCurrentPage('gigs')}
       >
-        <span className="nav-icon">🎯</span>
-        <span className="nav-label">Gig Scout</span>
+        <span className="nav-icon">💼</span>
+        <span className="nav-label">Gigs</span>
       </button>
       <button 
         className={`nav-item ${currentPage === 'loans' ? 'active' : ''}`}

@@ -30,7 +30,9 @@ export const userAPI = {
   getProfile: (userId) => api.get(`/users/${userId}`),
   updateProfile: (userId, data) => api.put(`/users/${userId}`, data),
   getLenders: () => api.get('/users/lenders/list'),
-  getGigWorkers: () => api.get('/users/workers/list')
+  getGigWorkers: () => api.get('/users/workers/list'),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data)
 };
 
 // Loan APIs
@@ -90,13 +92,22 @@ export const chatAPI = {
 
 // Gig APIs
 export const gigAPI = {
-  getGigs: (category) => api.get('/gigs', { params: { category } }),
+  getGigs: (params = {}) => api.get('/gigs', { params }),
+  getGigById: (gigId) => api.get(`/gigs/${gigId}`),
+  searchGigs: (filters) => api.get('/gigs', { params: filters }), // Enhanced search with filters
   createGig: (data) => api.post('/gigs', data),
   applyForGig: (gigId, data) => api.post(`/gigs/${gigId}/apply`, data),
   getMyGigs: () => api.get('/gigs/my-posts'),
   getMyJobs: () => api.get('/gigs/my-jobs'),
   hireWorker: (gigId, workerId) => api.post(`/gigs/${gigId}/hire`, { workerId }),
   confirmGig: (gigId) => api.post(`/gigs/${gigId}/confirm`)
+};
+
+// Site Content APIs
+export const siteContentAPI = {
+  getAllContent: () => api.get('/sitecontent'),
+  getContent: (contentType) => api.get(`/sitecontent/${contentType}`),
+  updateContent: (contentType, data) => api.put(`/sitecontent/${contentType}`, data)
 };
 
 export default api;

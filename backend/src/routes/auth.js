@@ -166,4 +166,106 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists (security)
+      return res.json({
+        message: 'If an account exists with this email, a reset link has been sent.'
+      });
+    }
+
+    // Generate 6-digit reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '15m' });
+
+    // Save reset code and token
+    user.passwordResetCode = resetCode;
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = Date.now() + 900000; // 15 minutes
+    await user.save();
+
+    // Send reset email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Reset your Smart Money password',
+        message: `Your password reset code is: ${resetCode}. It expires in 15 minutes.`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+            <h2 style="color: #5B21B6;">Password Reset Request</h2>
+            <p>Hi ${user.firstName},</p>
+            <p>We received a request to reset your Smart Money password. Use this 6-digit code to reset it:</p>
+            <div style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #5B21B6; margin: 20px 0;">
+              ${resetCode}
+            </div>
+            <p>This code will expire in 15 minutes.</p>
+            <p>If you didn't request a password reset, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            <p style="font-size: 12px; color: #666;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Password reset email failed:', emailError);
+    }
+
+    console.log(`[Password Reset] Code for ${email}: ${resetCode}`);
+
+    res.json({
+      message: 'If an account exists with this email, a reset link has been sent.'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    const user = await User.findOne({
+      email,
+      passwordResetCode: code,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset code' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    user.passwordResetCode = undefined;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    // Generate new login token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Password reset successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

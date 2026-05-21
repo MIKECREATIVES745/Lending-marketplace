@@ -19,11 +19,27 @@ const Settings = ({ currentUser, onSettingsUpdate }) => {
     }
   }, []);
 
+  const applyDarkModeCSS = (isDarkMode) => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  };
+
   const toggleOption = (key) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    const newSettings = {
+      ...settings,
+      [key]: !settings[key]
+    };
+    setSettings(newSettings);
+
+    // Apply dark mode CSS immediately when toggling
+    if (key === 'darkMode') {
+      applyDarkModeCSS(newSettings.darkMode);
+      // Save to localStorage immediately
+      localStorage.setItem('appSettings', JSON.stringify(newSettings));
+    }
   };
 
   const handleSave = () => {

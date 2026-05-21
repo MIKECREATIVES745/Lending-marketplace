@@ -9,7 +9,8 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
     email: '',
     phone: '',
     programOfStudy: '',
-    computerNumber: ''
+    computerNumber: '',
+    userType: 'both'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,7 +30,8 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
           email: res.data.email || '',
           phone: res.data.phone || '',
           programOfStudy: res.data.programOfStudy || '',
-          computerNumber: res.data.computerNumber || ''
+          computerNumber: res.data.computerNumber || '',
+          userType: res.data.userType || 'both'
         });
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -60,7 +62,8 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
         email: formState.email,
         phone: formState.phone,
         programOfStudy: formState.programOfStudy,
-        computerNumber: formState.computerNumber
+        computerNumber: formState.computerNumber,
+        userType: formState.userType
       });
       onProfileUpdate({
         ...currentUser,
@@ -69,7 +72,8 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
         email: res.data.email,
         phone: res.data.phone,
         programOfStudy: res.data.programOfStudy,
-        computerNumber: res.data.computerNumber
+        computerNumber: res.data.computerNumber,
+        userType: res.data.userType
       });
       localStorage.setItem('user', JSON.stringify({
         ...currentUser,
@@ -78,12 +82,14 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
         email: res.data.email,
         phone: res.data.phone,
         programOfStudy: res.data.programOfStudy,
-        computerNumber: res.data.computerNumber
+        computerNumber: res.data.computerNumber,
+        userType: res.data.userType
       }));
-      setMessage('Profile saved successfully.');
+      setMessage('✅ Profile saved successfully.');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error saving profile:', error);
-      setMessage('Unable to save profile. Please try again.');
+      setMessage('❌ Unable to save profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -163,13 +169,26 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
                 onChange={handleChange}
               />
             </div>
+
+            <div className="form-group">
+              <label>Account Type</label>
+              <select
+                name="userType"
+                value={formState.userType}
+                onChange={handleChange}
+              >
+                <option value="both">Both (Borrower & Lender)</option>
+                <option value="borrower">Borrower Only</option>
+                <option value="lender">Lender Only</option>
+              </select>
+            </div>
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-            {saving ? 'Saving...' : 'Save Profile'}
+            {saving ? 'Saving...' : '💾 Save Profile'}
           </button>
 
-          {message && <div className="success-message">{message}</div>}
+          {message && <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'}`}>{message}</div>}
         </form>
       </div>
     </div>

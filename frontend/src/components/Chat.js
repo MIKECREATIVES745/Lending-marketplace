@@ -41,10 +41,13 @@ const Chat = ({ currentUser }) => {
     if (!newMessage.trim()) return;
 
     try {
+      const otherParticipant = getOtherParticipant(selectedConversation);
+      const recipientId = otherParticipant._id || otherParticipant.id;
+      
       await chatAPI.sendMessage({
         conversationId: selectedConversation._id,
-        senderId: currentUser?.id,
-        recipientId: selectedConversation.participantIds.find(id => id._id !== currentUser?.id)?._id,
+        senderId: currentUser?.id || currentUser?._id,
+        recipientId: recipientId,
         message: newMessage
       });
       
@@ -56,7 +59,13 @@ const Chat = ({ currentUser }) => {
   };
 
   const getOtherParticipant = (conversation) => {
-    return conversation.participantIds.find(p => p._id !== (currentUser?.id || currentUser?._id)) || conversation.participantIds[0];
+    const currentUserId = currentUser?.id || currentUser?._id;
+    // Find participant that is not the current user
+    const otherParticipant = conversation.participantIds.find(
+      p => (p._id || p.id) !== currentUserId
+    );
+    // If no other participant found (shouldn't happen), return first participant
+    return otherParticipant || conversation.participantIds[0];
   };
 
   return (

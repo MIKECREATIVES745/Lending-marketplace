@@ -3,17 +3,84 @@ const Gig = require('../models/Gig');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
-// Get all open gigs
+// Haversine formula to calculate distance between two coordinates
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Get all open gigs with advanced filtering
 router.get('/', async (req, res) => {
   try {
-    const { category } = req.query;
-    let query = { status: 'open' };
-    if (category) query.category = category;
+    const { 
+      category, 
+      minBudget, 
+      maxBudget,
+      search,
+      lat,
+      lng,
+      radius = 5, // Default 5km radius
+      page = 1,
+      limit = 20
+    } = req.query;
 
-    const gigs = await Gig.find(query)
-      .populate('posterId', 'firstName lastName profileImage')
+    let query = { status: 'open' };
+    
+    if (category) query.category = category;
+    
+    if (minBudget || maxBudget) {
+      query.budget = {};
+      if (minBudget) query.budget.$gte = Number(minBudget);
+      if (maxBudget) query.budget.$lte = Number(maxBudget);
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    let gigs = await Gig.find(query)
+      .populate('posterId', 'firstName lastName profileImage email phone')
       .sort({ createdAt: -1 });
-    res.json(gigs);
+
+    // Filter by distance if coordinates provided
+    if (lat && lng) {
+      const userLat = Number(lat);
+      const userLng = Number(lng);
+      const radiusKm = Number(radius);
+
+      gigs = gigs.filter(gig => {
+        const gigLat = gig.location?.lat || -15.3941;
+        const gigLng = gig.location?.lng || 28.3297;
+        const distance = calculateDistance(userLat, userLng, gigLat, gigLng);
+        gig.distance = Math.round(distance * 100) / 100; // Store distance
+        return distance <= radiusKm;
+      });
+
+      // Sort by distance
+      gigs.sort((a, b) => a.distance - b.distance);
+    }
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    const paginatedGigs = gigs.slice(skip, skip + Number(limit));
+
+    res.json({
+      data: paginatedGigs,
+      total: gigs.length,
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(gigs.length / Number(limit))
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -38,6 +105,44 @@ router.post('/', auth, async (req, res) => {
     });
     await gig.save();
     res.status(201).json(gig);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's posted gigs (must come BEFORE /:id route)
+router.get('/my-posts', auth, async (req, res) => {
+  try {
+    const gigs = await Gig.find({ posterId: req.userId })
+      .populate('applicants.userId', 'firstName lastName profileImage')
+      .populate('assignedWorkerId', 'firstName lastName profileImage');
+    res.json(gigs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's active jobs (where they are the worker) (must come BEFORE /:id route)
+router.get('/my-jobs', auth, async (req, res) => {
+  try {
+    const gigs = await Gig.find({ assignedWorkerId: req.userId })
+      .populate('posterId', 'firstName lastName profileImage');
+    res.json(gigs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get a single gig by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const gig = await Gig.findById(req.params.id)
+      .populate('posterId', 'firstName lastName profileImage email phone')
+      .populate('assignedWorkerId', 'firstName lastName profileImage')
+      .populate('applicants.userId', 'firstName lastName profileImage email');
+    
+    if (!gig) return res.status(404).json({ error: 'Gig not found' });
+    res.json(gig);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -71,29 +176,6 @@ router.post('/:id/apply', auth, async (req, res) => {
     }
 
     res.json({ message: 'Application submitted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user's posted gigs
-router.get('/my-posts', auth, async (req, res) => {
-  try {
-    const gigs = await Gig.find({ posterId: req.userId })
-      .populate('applicants.userId', 'firstName lastName profileImage')
-      .populate('assignedWorkerId', 'firstName lastName profileImage');
-    res.json(gigs);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user's active jobs (where they are the worker)
-router.get('/my-jobs', auth, async (req, res) => {
-  try {
-    const gigs = await Gig.find({ assignedWorkerId: req.userId })
-      .populate('posterId', 'firstName lastName profileImage');
-    res.json(gigs);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

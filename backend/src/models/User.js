@@ -19,6 +19,12 @@ const userSchema = new mongoose.Schema({
   isEmailVerified: { type: Boolean, default: false },
   emailVerificationCode: String,
   emailVerificationExpires: Date,
+  
+  // Password reset
+  passwordResetCode: String,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  
   kycDocuments: [{ type: String }],
   
   // Financial info

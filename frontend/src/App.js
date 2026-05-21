@@ -5,11 +5,13 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Marketplace from './components/Marketplace';
 import Loans from './components/Loans';
-import GigScout from './components/GigScout';
+import GigBoard from './components/GigBoard';
 import Chat from './components/Chat';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import CollateralUpload from './components/CollateralUpload';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsConditions from './components/TermsConditions';
 import BottomNav from './components/BottomNav';
 import './styles/index.css';
 
@@ -112,7 +114,7 @@ function App() {
         )}
         {currentPage === 'marketplace' && <Marketplace currentUser={currentUser} />}
         {currentPage === 'loans' && <Loans currentUser={currentUser} />}
-        {currentPage === 'gigs' && <GigScout currentUser={currentUser} />}
+        {currentPage === 'gigs' && <GigBoard currentUser={currentUser} setCurrentPage={setCurrentPage} />}
         {currentPage === 'collateral' && <CollateralUpload currentUser={currentUser} />}
         {currentPage === 'chat' && <Chat currentUser={currentUser} />}
         {currentPage === 'profile' && (
@@ -140,6 +142,8 @@ function App() {
             }}
           />
         )}
+        {currentPage === 'privacy' && <PrivacyPolicy setCurrentPage={setCurrentPage} />}
+        {currentPage === 'terms' && <TermsConditions setCurrentPage={setCurrentPage} />}
       </main>
 
       <BottomNav
@@ -151,9 +155,9 @@ function App() {
       <footer className="app-footer">
         <div className="container footer-content">
           <div className="footer-links">
-            <button className="btn-link" onClick={() => alert('Terms & Conditions Coming Soon')}>Terms & Conditions</button>
+            <button className="btn-link" onClick={() => setCurrentPage('terms')}>Terms & Conditions</button>
             <span className="divider">|</span>
-            <button className="btn-link" onClick={() => alert('Privacy Policy Coming Soon')}>Privacy Policy</button>
+            <button className="btn-link" onClick={() => setCurrentPage('privacy')}>Privacy Policy</button>
           </div>
           <p>Contact: <a href="mailto:contact@mikecreatives.inc">contact@mikecreatives.inc</a></p>
           <p>© {new Date().getFullYear()} Smart Money · Mikecreatives Inc · Built by Mikec</p>

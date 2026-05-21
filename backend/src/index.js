@@ -51,6 +51,7 @@ app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api/collateral', require('./routes/collateral'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/gigs', require('./routes/gigs'));
+app.use('/api/sitecontent', require('./routes/sitecontent'));
 
 // Socket.io for real-time chat and notifications
 io.on('connection', (socket) => {

@@ -40,6 +40,7 @@ const GigScout = ({ currentUser }) => {
   const [myJobs, setMyJobs] = useState([]);
   const [showPostModal, setShowPostModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
   const [newGig, setNewGig] = useState({
     title: '',
     description: '',
@@ -65,6 +66,8 @@ const GigScout = ({ currentUser }) => {
       setMyJobs(myJobsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setMessage('❌ Failed to load data. Please try again.');
+      setTimeout(() => setMessage(''), 3000);
     } finally {
       setLoading(false);
     }
@@ -76,10 +79,18 @@ const GigScout = ({ currentUser }) => {
 
   const handlePostGig = async (e) => {
     e.preventDefault();
+    if (!newGig.title || !newGig.description || !newGig.budget) {
+      setMessage('❌ Please fill in all required fields');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
     try {
+      setLoading(true);
       // Add current campus location to the gig
       const gigData = {
         ...newGig,
+        budget: parseFloat(newGig.budget),
         location: {
           lat: UNZA_COORDS[0] + (Math.random() - 0.5) * 0.01, // Randomize slightly for demo
           lng: UNZA_COORDS[1] + (Math.random() - 0.5) * 0.01,
@@ -89,31 +100,57 @@ const GigScout = ({ currentUser }) => {
       await gigAPI.createGig(gigData);
       setShowPostModal(false);
       setNewGig({ title: '', description: '', budget: '', category: 'academic', deadline: '' });
+      setMessage('✅ Gig posted successfully!');
+      setTimeout(() => setMessage(''), 3000);
       fetchData();
-      alert('Gig posted successfully!');
     } catch (error) {
       console.error('Error posting gig:', error);
-      alert('Failed to post gig.');
+      setMessage('❌ Failed to post gig: ' + (error.response?.data?.error || error.message));
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApply = async (gigId) => {
+    try {
+      setLoading(true);
+      await gigAPI.applyForGig(gigId, { message: 'I am interested in this gig' });
+      setMessage('✅ Applied successfully!');
+      setTimeout(() => setMessage(''), 3000);
+      fetchData();
+    } catch (error) {
+      console.error('Error applying for gig:', error);
+      setMessage('❌ Failed to apply: ' + (error.response?.data?.error || error.message));
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleConfirm = async (gigId) => {
     try {
       await gigAPI.confirmGig(gigId);
-      alert('Confirmation recorded!');
+      setMessage('✅ Confirmation recorded!');
+      setTimeout(() => setMessage(''), 3000);
       fetchData();
     } catch (error) {
-      alert('Failed to confirm completion.');
+      console.error('Error confirming gig:', error);
+      setMessage('❌ Failed to confirm: ' + (error.response?.data?.error || error.message));
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
   const handleHire = async (gigId, workerId) => {
     try {
       await gigAPI.hireWorker(gigId, workerId);
-      alert('Worker hired! Escrow initiated.');
+      setMessage('✅ Worker hired! Escrow initiated.');
+      setTimeout(() => setMessage(''), 3000);
       fetchData();
     } catch (error) {
-      alert('Failed to hire worker.');
+      console.error('Error hiring worker:', error);
+      setMessage('❌ Failed to hire worker: ' + (error.response?.data?.error || error.message));
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -240,6 +277,8 @@ const GigScout = ({ currentUser }) => {
           </div>
           <button className="btn btn-primary btn-small" onClick={() => setShowPostModal(true)}>Post a Gig</button>
         </div>
+
+        {message && <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'}`}>{message}</div>}
 
         {loading ? (
           <div className="loading-state">Scanning campus for opportunities...</div>
