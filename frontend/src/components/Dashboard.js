@@ -20,7 +20,8 @@ const Dashboard = ({ currentUser, setCurrentPage }) => {
   const fetchQuickGigs = useCallback(async () => {
     try {
       const res = await gigAPI.getGigs();
-      setQuickGigs(res.data.slice(0, 3));
+      const gigsData = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setQuickGigs(gigsData.slice(0, 3));
     } catch (error) {
       console.error('Error fetching quick gigs:', error);
     }

@@ -60,10 +60,16 @@ const GigScout = ({ currentUser }) => {
         gigAPI.getMyGigs(),
         gigAPI.getMyJobs()
       ]);
-      setGigs(gigRes.data);
-      setWorkers(workerRes.data);
-      setMyGigs(myGigsRes.data);
-      setMyJobs(myJobsRes.data);
+      // Handle different response structures
+      const gigsData = Array.isArray(gigRes.data) ? gigRes.data : gigRes.data?.data || [];
+      const workersData = Array.isArray(workerRes.data) ? workerRes.data : workerRes.data?.data || [];
+      const myGigsData = Array.isArray(myGigsRes.data?.data) ? myGigsRes.data.data : Array.isArray(myGigsRes.data) ? myGigsRes.data : [];
+      const myJobsData = Array.isArray(myJobsRes.data?.data) ? myJobsRes.data.data : Array.isArray(myJobsRes.data) ? myJobsRes.data : [];
+      
+      setGigs(gigsData);
+      setWorkers(workersData);
+      setMyGigs(myGigsData);
+      setMyJobs(myJobsData);
     } catch (error) {
       console.error('Error fetching data:', error);
       setMessage('❌ Failed to load data. Please try again.');
@@ -90,7 +96,8 @@ const GigScout = ({ currentUser }) => {
       // Add current campus location to the gig
       const gigData = {
         ...newGig,
-        budget: parseFloat(newGig.budget),
+        budget: Number(newGig.budget),
+        deadline: newGig.deadline ? new Date(newGig.deadline).toISOString() : null,
         location: {
           lat: UNZA_COORDS[0] + (Math.random() - 0.5) * 0.01, // Randomize slightly for demo
           lng: UNZA_COORDS[1] + (Math.random() - 0.5) * 0.01,

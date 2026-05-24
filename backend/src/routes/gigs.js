@@ -116,7 +116,10 @@ router.get('/my-posts', auth, async (req, res) => {
     const gigs = await Gig.find({ posterId: req.userId })
       .populate('applicants.userId', 'firstName lastName profileImage')
       .populate('assignedWorkerId', 'firstName lastName profileImage');
-    res.json(gigs);
+    res.json({
+      data: gigs,
+      total: gigs.length
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -127,7 +130,10 @@ router.get('/my-jobs', auth, async (req, res) => {
   try {
     const gigs = await Gig.find({ assignedWorkerId: req.userId })
       .populate('posterId', 'firstName lastName profileImage');
-    res.json(gigs);
+    res.json({
+      data: gigs,
+      total: gigs.length
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -188,7 +194,8 @@ router.post('/:id/hire', auth, async (req, res) => {
     const gig = await Gig.findById(req.params.id);
 
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
-    if (gig.posterId.toString() !== req.userId) {
+    const posterIdStr = gig.posterId ? gig.posterId.toString() : null;
+    if (posterIdStr !== req.userId) {
       return res.status(403).json({ error: 'Only the poster can hire workers' });
     }
 
@@ -221,9 +228,12 @@ router.post('/:id/confirm', auth, async (req, res) => {
     const gig = await Gig.findById(req.params.id);
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
 
-    if (req.userId === gig.posterId.toString()) {
+    const posterIdStr = gig.posterId ? gig.posterId.toString() : null;
+    const workerIdStr = gig.assignedWorkerId ? gig.assignedWorkerId.toString() : null;
+
+    if (req.userId === posterIdStr) {
       gig.posterConfirmation = true;
-    } else if (req.userId === gig.assignedWorkerId.toString()) {
+    } else if (req.userId === workerIdStr) {
       gig.workerConfirmation = true;
     } else {
       return res.status(403).json({ error: 'Unauthorized' });

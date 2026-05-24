@@ -34,7 +34,7 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
     category: '',
     minBudget: '',
     maxBudget: '',
-    radius: 5
+    radius: 5  // Ensure it starts as a number
   });
   const [newGig, setNewGig] = useState({
     title: '',
@@ -51,12 +51,16 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setUserLocation(newLocation);
         },
-        (error) => console.log('Location error:', error)
+        (error) => {
+          console.log('Location error:', error);
+          // Keep default location if geolocation fails
+        }
       );
     }
   }, []);
@@ -69,16 +73,19 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
         ...filters,
         lat: userLocation.lat,
         lng: userLocation.lng,
-        radius: filters.radius
+        radius: Number(filters.radius)  // Ensure radius is a number
       };
       
       // Remove empty values
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       
       const response = await gigAPI.searchGigs(params);
-      setGigs(response.data.data || response.data);
+      // Handle different response structures
+      const gigsData = response.data?.data || response.data || [];
+      setGigs(Array.isArray(gigsData) ? gigsData : []);
     } catch (error) {
       console.error('Error fetching gigs:', error);
+      setGigs([]);
       alert('Failed to load gigs');
     } finally {
       setLoading(false);
@@ -86,6 +93,7 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
   }, [filters, userLocation]);
 
   useEffect(() => {
+    // Only fetch if location is not default (meaning it was updated or we should use default)
     fetchGigs();
   }, [fetchGigs]);
 
@@ -110,6 +118,7 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
       const gigData = {
         ...newGig,
         budget: Number(newGig.budget),
+        deadline: newGig.deadline ? new Date(newGig.deadline).toISOString() : null,
         location: {
           lat: userLocation.lat,
           lng: userLocation.lng,
@@ -304,7 +313,7 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
                   min="1"
                   max="50"
                   value={filters.radius}
-                  onChange={(e) => setFilters({...filters, radius: e.target.value})}
+                  onChange={(e) => setFilters({...filters, radius: Number(e.target.value)})}
                   className="filter-input"
                 />
               </div>
