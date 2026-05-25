@@ -17,22 +17,26 @@ const CollateralUpload = ({ currentUser }) => {
     condition: 'good'
   });
 
+  const userId = currentUser?.id || currentUser?._id;
+
   const loadCollateral = useCallback(async () => {
+    if (!userId) return;
+
     try {
-      const response = await collateralAPI.getUserCollateral(currentUser.id);
+      const response = await collateralAPI.getUserCollateral(userId);
       setCollateralItems(response.data);
     } catch (err) {
       console.error('Error loading collateral:', err);
       setError('Failed to load collateral items');
     }
-  }, [currentUser?.id]);
+  }, [userId]);
 
   // Load user's collateral
   useEffect(() => {
-    if (currentUser?.id) {
+    if (userId) {
       loadCollateral();
     }
-  }, [currentUser?.id, loadCollateral]);
+  }, [userId, loadCollateral]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -75,7 +79,7 @@ const CollateralUpload = ({ currentUser }) => {
 
       // Create FormData for file upload
       const uploadData = new FormData();
-      uploadData.append('userId', currentUser.id);
+      uploadData.append('userId', userId);
       uploadData.append('itemName', formData.itemName);
       uploadData.append('category', formData.category);
       uploadData.append('estimatedValue', parseFloat(formData.estimatedValue));

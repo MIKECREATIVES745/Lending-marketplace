@@ -146,7 +146,7 @@ const Loans = ({ currentUser }) => {
                 </button>
               )}
             </div>
-          )}
+          )}k
         </>
       )}
     </div>
