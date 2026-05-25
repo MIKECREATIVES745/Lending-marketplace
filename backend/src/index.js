@@ -4,7 +4,11 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const envResult = dotenv.config({ path: path.resolve(__dirname, '../.env'), override: process.env.NODE_ENV !== 'production' });
+if (envResult.error) {
+  console.warn('No .env file loaded:', envResult.error.message);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +19,8 @@ const io = socketIo(server, {
     credentials: true
   }
 });
+
+const User = require('./models/User');
 
 // Middleware
 app.use(cors({
@@ -34,8 +40,41 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lending-unza')
-  .then(() => console.log('✓ MongoDB connected'))
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lending-unza';
+console.log(`Connecting to MongoDB at ${mongoUri}`);
+mongoose.connect(mongoUri)
+  .then(async () => {
+    console.log('✓ MongoDB connected');
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (adminEmail && adminPassword) {
+      try {
+        let adminUser = await User.findOne({ email: adminEmail });
+        if (!adminUser) {
+          adminUser = new User({
+            firstName: process.env.ADMIN_FIRST_NAME || 'Admin',
+            lastName: process.env.ADMIN_LAST_NAME || 'Owner',
+            email: adminEmail,
+            password: adminPassword,
+            userType: 'lender',
+            isAdmin: true,
+            isEmailVerified: true
+          });
+          await adminUser.save();
+          console.log(`✓ Admin user created: ${adminEmail}`);
+        } else if (!adminUser.isAdmin || !adminUser.isEmailVerified) {
+          adminUser.isAdmin = true;
+          adminUser.isEmailVerified = true;
+          await adminUser.save();
+          console.log(`✓ Admin user updated to isAdmin: ${adminEmail}`);
+        }
+      } catch (seedError) {
+        console.error('✗ Admin seed error:', seedError);
+      }
+    }
+  })
   .catch(err => console.log('✗ MongoDB error:', err));
 
 // Health check endpoint
@@ -51,7 +90,9 @@ app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api/collateral', require('./routes/collateral'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/gigs', require('./routes/gigs'));
+app.use('/api/lending', require('./routes/lending'));
 app.use('/api/sitecontent', require('./routes/sitecontent'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Socket.io for real-time chat and notifications
 io.on('connection', (socket) => {

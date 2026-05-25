@@ -1,26 +1,34 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  // 1) Create a transporter
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
+  // Skip email if credentials are not configured
+  if (!process.env.EMAIL_USERNAME || !process.env.EMAIL_PASSWORD) {
+    console.warn('[Email] Skipping: SMTP credentials not configured.');
+    return;
+  }
 
-  // 2) Define the email options
-  const mailOptions = {
-    from: `Smart Money <${process.env.EMAIL_USERNAME}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: options.html
-  };
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
 
-  // 3) Actually send the email
-  await transporter.sendMail(mailOptions);
+    const mailOptions = {
+      from: `Smart Money <${process.env.EMAIL_USERNAME}>`,
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+      html: options.html
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[Email] Sent to ${options.email}`);
+  } catch (error) {
+    console.error('[Email] Send failed (continuing):', error.message);
+  }
 };
 
 module.exports = sendEmail;

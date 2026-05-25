@@ -15,6 +15,13 @@ const loanSchema = new mongoose.Schema({
   // Collateral
   collateralId: { type: mongoose.Schema.Types.ObjectId, ref: 'Collateral' },
   collateralValue: { type: Number, required: true },
+
+  platformFeeRate: { type: Number, default: 0.02 },
+  platformFeeAmount: { type: Number, default: 0 },
+  paymentFeeRate: { type: Number, default: 0.005 },
+  paymentPlatformFeeTotal: { type: Number, default: 0 },
+  platformRevenue: { type: Number, default: 0 },
+  lenderReceives: { type: Number, default: 0 },
   
   // Status
   status: { 

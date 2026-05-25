@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { chatAPI } from '../utils/api';
+import { chatAPI, userAPI } from '../utils/api';
 import '../styles/chat.css';
 
 const Chat = ({ currentUser }) => {
@@ -7,28 +7,66 @@ const Chat = ({ currentUser }) => {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [recommendedUsers, setRecommendedUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [chatError, setChatError] = useState('');
+
+  const currentUserId = currentUser?.id || currentUser?._id;
 
   const fetchConversations = useCallback(async () => {
+    if (!currentUserId) return;
     try {
-      const res = await chatAPI.getConversations(currentUser?.id);
+      const res = await chatAPI.getConversations(currentUserId);
       setConversations(res.data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      setChatError('Unable to load conversations. Please refresh.');
     }
-  }, [currentUser?.id]);
+  }, [currentUserId]);
 
   const fetchMessages = useCallback(async () => {
+    if (!selectedConversation?._id) return;
     try {
       const res = await chatAPI.getMessages(selectedConversation._id);
       setMessages(res.data);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setChatError('Unable to load messages.');
     }
   }, [selectedConversation]);
 
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      setLoadingUsers(true);
+      try {
+        if (currentUser?.userType === 'borrower') {
+          const res = await userAPI.getLenders();
+          setRecommendedUsers(res.data.filter(u => String(u._id) !== String(currentUserId)));
+        } else if (currentUser?.userType === 'lender') {
+          const res = await userAPI.getBorrowers();
+          setRecommendedUsers(res.data.filter(u => String(u._id) !== String(currentUserId)));
+        } else {
+          const [lenders, borrowers] = await Promise.all([userAPI.getLenders(), userAPI.getBorrowers()]);
+          setRecommendedUsers([
+            ...lenders.data,
+            ...borrowers.data
+          ].filter(u => String(u._id) !== String(currentUserId)));
+        }
+      } catch (error) {
+        console.error('Error loading recommended users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    if (currentUserId) {
+      loadRecommendations();
+    }
+  }, [currentUserId, currentUser?.userType]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -38,7 +76,7 @@ const Chat = ({ currentUser }) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedConversation?._id) return;
 
     try {
       const otherParticipant = getOtherParticipant(selectedConversation);
@@ -46,32 +84,44 @@ const Chat = ({ currentUser }) => {
       
       await chatAPI.sendMessage({
         conversationId: selectedConversation._id,
-        senderId: currentUser?.id || currentUser?._id,
-        recipientId: recipientId,
+        recipientId,
         message: newMessage
       });
       
       setNewMessage('');
-      fetchMessages();
+      await fetchMessages();
+      await fetchConversations();
     } catch (error) {
       console.error('Error sending message:', error);
+      setChatError('Failed to send message.');
     }
   };
 
   const getOtherParticipant = (conversation) => {
-    const currentUserId = currentUser?.id || currentUser?._id;
-    // Find participant that is not the current user
     const otherParticipant = conversation.participantIds.find(
-      p => (p._id || p.id) !== currentUserId
+      p => String(p._id || p.id) !== String(currentUserId)
     );
-    // If no other participant found (shouldn't happen), return first participant
     return otherParticipant || conversation.participantIds[0];
+  };
+
+  const startConversation = async (user) => {
+    if (!user?._id) return;
+    try {
+      const res = await chatAPI.createConversation({ partnerId: user._id });
+      setSelectedConversation(res.data);
+      setMessages([]);
+      await fetchConversations();
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      setChatError('Unable to start conversation.');
+    }
   };
 
   return (
     <div className="chat-container">
       <div className="chat-sidebar">
         <h3>Messages</h3>
+        {chatError && <div className="alert alert-error">{chatError}</div>}
         <div className="conversations-list">
           {conversations.map(conv => {
             const otherUser = getOtherParticipant(conv);
@@ -87,12 +137,32 @@ const Chat = ({ currentUser }) => {
                 <div className="conversation-info">
                   <h4>{otherUser.firstName} {otherUser.lastName}</h4>
                   <p className="last-message">
-                    {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleDateString() : 'No messages'}
+                    {conv.lastMessage?.message || 'No messages yet'}
                   </p>
+                  <small>{conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleDateString() : ''}</small>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        <div className="chat-recommendations">
+          <h4>Start a new chat</h4>
+          {loadingUsers ? (
+            <p>Loading users...</p>
+          ) : recommendedUsers.length > 0 ? (
+            recommendedUsers.slice(0, 5).map(user => (
+              <button
+                key={user._id}
+                className="recommended-user"
+                onClick={() => startConversation(user)}
+              >
+                {user.firstName} {user.lastName}
+              </button>
+            ))
+          ) : (
+            <p className="text-muted">No recommended contacts available.</p>
+          )}
         </div>
       </div>
 
@@ -109,7 +179,7 @@ const Chat = ({ currentUser }) => {
               {messages.map(msg => (
                 <div 
                   key={msg._id}
-                  className={`message ${msg.senderId._id === currentUser?.id ? 'sent' : 'received'}`}
+                  className={`message ${String(msg.senderId._id || msg.senderId.id) === String(currentUserId) ? 'sent' : 'received'}`}
                 >
                   <div className="message-avatar">
                     {msg.senderId.firstName?.charAt(0)}
@@ -134,7 +204,7 @@ const Chat = ({ currentUser }) => {
           </>
         ) : (
           <div className="chat-empty">
-            <p>Select a conversation to start messaging</p>
+            <p>Select a conversation or start a new chat from the list.</p>
           </div>
         )}
       </div>

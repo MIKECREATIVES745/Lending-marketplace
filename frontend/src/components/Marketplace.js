@@ -23,7 +23,7 @@ const Marketplace = ({ currentUser }) => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const userType = currentUser?.userType || 'both';
+  const userType = currentUser?.userType === 'lender' ? 'lender' : 'borrower';
   const userId = currentUser?.id || currentUser?._id;
 
   const fetchLoans = useCallback(async () => {
@@ -72,11 +72,13 @@ const Marketplace = ({ currentUser }) => {
     
     try {
       await loanAPI.createLoan({
+        borrowerId: userId,
         amount: parseFloat(requestFormData.amount),
         purpose: requestFormData.purpose,
         loanTerm: parseInt(requestFormData.loanTerm),
         interestRate: parseFloat(requestFormData.interestRate),
-        collateralValue: parseFloat(requestFormData.collateralValue)
+        collateralValue: parseFloat(requestFormData.collateralValue),
+        paymentPeriod: 30
       });
       
       setMessage('✅ Loan request created successfully!');
@@ -91,7 +93,26 @@ const Marketplace = ({ currentUser }) => {
       setTimeout(() => setMessage(''), 3000);
       fetchMyLoans();
     } catch (error) {
-      setMessage('❌ Error creating loan request: ' + error.response?.data?.message || error.message);
+      const errorText = error.response?.data?.error || error.response?.data?.message || error.message;
+      setMessage(`❌ Error creating loan request: ${errorText}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFundLoan = async (loanId) => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      await loanAPI.acceptLoan(loanId, { lenderId: userId });
+      setMessage('✅ Loan funded successfully!');
+      setTimeout(() => setMessage(''), 3000);
+      fetchLoans();
+      fetchMyLoans();
+    } catch (error) {
+      const errorText = error.response?.data?.error || error.response?.data?.message || error.message;
+      setMessage(`❌ Error funding loan: ${errorText}`);
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +126,7 @@ const Marketplace = ({ currentUser }) => {
         {/* Role indicator */}
         <div className="role-indicator">
           <span className="role-badge">
-            {userType === 'borrower' ? '📊 Borrower' : userType === 'lender' ? '💸 Lender' : '🔄 Both'}
+            {userType === 'borrower' ? '📊 Borrower' : '💸 Lender'}
           </span>
         </div>
 
@@ -218,7 +239,13 @@ const Marketplace = ({ currentUser }) => {
                     <small>Credit Score: {loan.borrowerId?.creditScore}</small>
                   </div>
                   
-                  <button className="btn btn-primary btn-block">Fund This Loan</button>
+                  <button
+                    className="btn btn-primary btn-block"
+                    onClick={() => handleFundLoan(loan._id)}
+                    disabled={isLoading || loan.status === 'active'}
+                  >
+                    {loan.status === 'active' ? 'Already Funded' : 'Fund This Loan'}
+                  </button>
                 </div>
               )) : <div className="card text-center p-3"><p>No loans available to fund</p></div>}
             </div>

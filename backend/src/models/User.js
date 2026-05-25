@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   
   // User type: borrower, lender, or both
   userType: { type: String, enum: ['borrower', 'lender', 'both'], default: 'both' },
+  isAdmin: { type: Boolean, default: false },
   
   // KYC and verification
   verified: { type: Boolean, default: false },

@@ -8,7 +8,7 @@ const Loans = ({ currentUser }) => {
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const userId = currentUser?.id || currentUser?._id;
-  const userType = currentUser?.userType || 'both';
+  const userType = currentUser?.userType === 'lender' ? 'lender' : 'borrower';
 
   const fetchLoans = useCallback(async () => {
     try {

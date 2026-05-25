@@ -23,12 +23,18 @@ const gigIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const GigBoard = ({ currentUser, setCurrentPage }) => {
+const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitialGigToApply }) => {
   const [gigs, setGigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
   const [userLocation, setUserLocation] = useState({ lat: -15.3941, lng: 28.3297 }); // UNZA default
+  const userId = currentUser?.id || currentUser?._id;
+  const isPoster = (poster) => {
+    if (!userId || !poster) return false;
+    const posterId = typeof poster === 'string' ? poster : poster._id || poster.id;
+    return String(userId) === String(posterId);
+  };
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -45,6 +51,21 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
   });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [gigToApply, setGigToApply] = useState(null);
+  const [applyMessage, setApplyMessage] = useState('');
+  const [applyLoading, setApplyLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialGigToApply && initialGigToApply._id) {
+      setGigToApply(initialGigToApply);
+      setApplyMessage('');
+      setShowApplyModal(true);
+      if (typeof clearInitialGigToApply === 'function') {
+        clearInitialGigToApply();
+      }
+    }
+  }, [initialGigToApply, clearInitialGigToApply]);
 
   // Get user's location
   useEffect(() => {
@@ -142,11 +163,20 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
     }
   };
 
-  const handleApplyForGig = async (gigId) => {
+  const openApplyModal = (gig) => {
+    setGigToApply(gig);
+    setApplyMessage('');
+    setShowApplyModal(true);
+  };
+
+  const handleApplyForGig = async (gigId, messageText) => {
     try {
-      setLoading(true);
-      await gigAPI.applyForGig(gigId, { message: 'I am interested in this gig' });
-      setMessage('✅ Application submitted! The gig poster will review your application.');
+      setApplyLoading(true);
+      await gigAPI.applyForGig(gigId, { message: messageText });
+      setMessage('✅ Application submitted! The gig poster will review your proposal.');
+      setShowApplyModal(false);
+      setApplyMessage('');
+      setGigToApply(null);
       setTimeout(() => setMessage(''), 3000);
       fetchGigs();
     } catch (error) {
@@ -159,7 +189,7 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
       }
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      setLoading(false);
+      setApplyLoading(false);
     }
   };
 
@@ -375,16 +405,15 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
                     <span>{gig.posterId?.firstName} {gig.posterId?.lastName}</span>
                   </div>
 
-                  {currentUser && currentUser._id !== gig.posterId?._id && (
+                  {currentUser && !isPoster(gig.posterId) && (
                     <button 
                       className="btn btn-primary btn-full mt-2"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleApplyForGig(gig._id);
+                        openApplyModal(gig);
                       }}
-                      disabled={loading}
                     >
-                      {loading ? '⏳ Processing...' : '✅ Apply Now'}
+                      ✅ Apply Now
                     </button>
                   )}
                 </div>
@@ -397,6 +426,73 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
           </div>
         </div>
       </div>
+
+      {/* Apply Gig Modal */}
+      {showApplyModal && gigToApply && (
+        <div className="modal-overlay" onClick={() => setShowApplyModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Apply for Gig</h2>
+              <button 
+                className="close-btn"
+                onClick={() => setShowApplyModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="gig-form">
+              <div className="form-group">
+                <label>Gig</label>
+                <input type="text" value={gigToApply.title} disabled />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea value={gigToApply.description} disabled rows="3" />
+              </div>
+              <div className="form-group">
+                <label>Budget</label>
+                <input type="text" value={`ZMW ${gigToApply.budget}`} disabled />
+              </div>
+              <div className="form-group">
+                <label>Your Proposal *</label>
+                <textarea
+                  placeholder="Write a short message about why you're the best fit, your availability, and any details the poster should know."
+                  value={applyMessage}
+                  onChange={(e) => setApplyMessage(e.target.value)}
+                  rows="5"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Estimated Delivery Time</label>
+                <input
+                  type="text"
+                  value={gigToApply.deadline ? new Date(gigToApply.deadline).toLocaleDateString() : 'Flexible'}
+                  disabled
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowApplyModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => handleApplyForGig(gigToApply._id, applyMessage)}
+                  disabled={applyLoading || !applyMessage.trim()}
+                >
+                  {applyLoading ? '⏳ Sending...' : 'Submit Application'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Post Gig Modal */}
       {showPostModal && (
@@ -532,16 +628,15 @@ const GigBoard = ({ currentUser, setCurrentPage }) => {
                 <p>{selectedGig.description}</p>
               </div>
 
-              {currentUser && currentUser._id !== selectedGig.posterId?._id && selectedGig.status === 'open' && (
+              {currentUser && !isPoster(selectedGig.posterId) && selectedGig.status === 'open' && (
                 <button 
                   className="btn btn-primary btn-lg btn-full"
                   onClick={() => {
-                    handleApplyForGig(selectedGig._id);
+                    openApplyModal(selectedGig);
                     setSelectedGig(null);
                   }}
-                  disabled={loading}
                 >
-                  {loading ? '⏳ Processing...' : '✅ Apply for this Gig'}
+                  ✅ Apply for this Gig
                 </button>
               )}
             </div>

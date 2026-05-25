@@ -4,7 +4,7 @@ import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
 import '../styles/auth.css';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = ({ onLoginSuccess, onAdminLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -16,7 +16,7 @@ const Login = ({ onLoginSuccess }) => {
     lastName: '',
     email: '',
     password: '',
-    userType: 'both',
+    userType: 'borrower',
     phone: '',
     programOfStudy: '',
     computerNumber: ''
@@ -185,7 +185,6 @@ const Login = ({ onLoginSuccess }) => {
               <div className="form-group">
                 <label>User Type</label>
                 <select name="userType" value={formData.userType} onChange={handleChange}>
-                  <option value="both">Both Lender & Borrower</option>
                   <option value="borrower">Borrower Only</option>
                   <option value="lender">Lender Only</option>
                 </select>
@@ -225,6 +224,9 @@ const Login = ({ onLoginSuccess }) => {
               {isLogin ? 'Sign Up' : 'Sign In'}
             </button>
           </p>
+          <button type="button" className="btn-link" onClick={onAdminLogin}>
+            Admin login
+          </button>
         </div>
       </div>
     </div>

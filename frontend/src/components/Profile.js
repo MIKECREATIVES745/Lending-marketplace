@@ -10,7 +10,7 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
     phone: '',
     programOfStudy: '',
     computerNumber: '',
-    userType: 'both'
+    userType: 'borrower'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,7 +31,7 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
           phone: res.data.phone || '',
           programOfStudy: res.data.programOfStudy || '',
           computerNumber: res.data.computerNumber || '',
-          userType: res.data.userType || 'both'
+          userType: res.data.userType === 'lender' ? 'lender' : 'borrower'
         });
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -177,7 +177,6 @@ const Profile = ({ currentUser, onProfileUpdate }) => {
                 value={formState.userType}
                 onChange={handleChange}
               >
-                <option value="both">Both (Borrower & Lender)</option>
                 <option value="borrower">Borrower Only</option>
                 <option value="lender">Lender Only</option>
               </select>

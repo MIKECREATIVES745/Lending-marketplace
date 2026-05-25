@@ -5,6 +5,9 @@ const Loan = require('../models/Loan');
 const User = require('../models/User');
 const router = express.Router();
 
+const PLATFORM_FEE_RATE = parseFloat(process.env.PLATFORM_FEE_RATE || '0.02');
+const PAYMENT_FEE_RATE = parseFloat(process.env.PAYMENT_FEE_RATE || '0.005');
+
 // Create loan request
 router.post('/', async (req, res) => {
   try {
@@ -19,6 +22,8 @@ router.post('/', async (req, res) => {
       paymentPeriod,
       collateralValue,
       purpose,
+      platformFeeRate: PLATFORM_FEE_RATE,
+      paymentFeeRate: PAYMENT_FEE_RATE,
       remainingBalance: amount
     });
     
@@ -90,6 +95,9 @@ router.put('/:id/accept', async (req, res) => {
       width: 300
     });
     
+    const platformFeeAmount = loan.amount * (loan.platformFeeRate || PLATFORM_FEE_RATE);
+    const lenderReceives = loan.amount - platformFeeAmount;
+
     // Update loan
     const updatedLoan = await Loan.findByIdAndUpdate(
       req.params.id,
@@ -99,7 +107,10 @@ router.put('/:id/accept', async (req, res) => {
         startDate: new Date(),
         expectedCompletionDate: new Date(Date.now() + loan.loanTerm * 24 * 60 * 60 * 1000),
         qrCode: qrCodeDataUrl,
-        verificationCode: verificationCode
+        verificationCode: verificationCode,
+        platformFeeAmount,
+        lenderReceives,
+        platformRevenue: platformFeeAmount
       },
       { new: true }
     ).populate('borrowerId lenderId');
@@ -132,9 +143,16 @@ router.post('/:id/payment', async (req, res) => {
       return res.status(404).json({ error: 'Loan not found' });
     }
     
+    const paymentFeeRate = loan.paymentFeeRate || PAYMENT_FEE_RATE;
+    const paymentFeeAmount = amount * paymentFeeRate;
+    const netPaymentToLender = amount - paymentFeeAmount;
+
     // Update payment
     loan.totalRepaid += amount;
     loan.remainingBalance -= amount;
+    loan.paymentPlatformFeeTotal = (loan.paymentPlatformFeeTotal || 0) + paymentFeeAmount;
+    loan.platformRevenue = (loan.platformRevenue || 0) + paymentFeeAmount;
+    loan.lenderReceives = (loan.lenderReceives || 0) + netPaymentToLender;
     
     if (loan.remainingBalance <= 0) {
       loan.status = 'completed';

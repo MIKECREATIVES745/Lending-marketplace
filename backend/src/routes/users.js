@@ -15,6 +15,18 @@ router.get('/lenders/list', async (req, res) => {
   }
 });
 
+router.get('/borrowers/list', async (req, res) => {
+  try {
+    const borrowers = await User.find({ 
+      userType: { $in: ['borrower', 'both'] },
+      verified: true 
+    }).select('-password -bankDetails');
+    res.json(borrowers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get user profile
 router.get('/:id', async (req, res) => {
   try {

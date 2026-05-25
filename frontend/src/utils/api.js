@@ -30,6 +30,7 @@ export const userAPI = {
   getProfile: (userId) => api.get(`/users/${userId}`),
   updateProfile: (userId, data) => api.put(`/users/${userId}`, data),
   getLenders: () => api.get('/users/lenders/list'),
+  getBorrowers: () => api.get('/users/borrowers/list'),
   getGigWorkers: () => api.get('/users/workers/list'),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   resetPassword: (data) => api.post('/auth/reset-password', data)
@@ -90,6 +91,17 @@ export const chatAPI = {
   sendMessage: (data) => api.post('/chat/message', data)
 };
 
+// Lending APIs
+export const lendingAPI = {
+  getLendingOffers: () => api.get('/lending'),
+  getLendingOffer: (offerId) => api.get(`/lending/${offerId}`),
+  createLendingOffer: (data) => api.post('/lending', data),
+  getMyOffers: () => api.get('/lending/my-offers/list'),
+  updateLendingOffer: (offerId, data) => api.put(`/lending/${offerId}`, data),
+  deleteLendingOffer: (offerId) => api.delete(`/lending/${offerId}`),
+  applyForOffer: (offerId) => api.post(`/lending/${offerId}/apply`)
+};
+
 // Gig APIs
 export const gigAPI = {
   getGigs: (params = {}) => api.get('/gigs', { params }),
@@ -108,6 +120,11 @@ export const siteContentAPI = {
   getAllContent: () => api.get('/sitecontent'),
   getContent: (contentType) => api.get(`/sitecontent/${contentType}`),
   updateContent: (contentType, data) => api.put(`/sitecontent/${contentType}`, data)
+};
+
+export const adminAPI = {
+  getSummary: (params = {}) => api.get('/admin/summary', { params }),
+  getTransactions: (params = {}) => api.get('/admin/transactions', { params })
 };
 
 export default api;

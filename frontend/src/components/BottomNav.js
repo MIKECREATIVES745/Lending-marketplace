@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/bottom-nav.css';
 
-const BottomNav = ({ currentPage, setCurrentPage, onLogout }) => {
+const BottomNav = ({ currentPage, setCurrentPage, currentUser, onLogout }) => {
   return (
     <nav className="bottom-nav">
       <button 
@@ -32,13 +32,24 @@ const BottomNav = ({ currentPage, setCurrentPage, onLogout }) => {
         <span className="nav-icon">💰</span>
         <span className="nav-label">Loans</span>
       </button>
-      <button 
-        className={`nav-item ${currentPage === 'collateral' ? 'active' : ''}`}
-        onClick={() => setCurrentPage('collateral')}
-      >
-        <span className="nav-icon">📦</span>
-        <span className="nav-label">Collateral</span>
-      </button>
+      {['lender', 'both'].includes(currentUser?.userType) && (
+        <button 
+          className={`nav-item ${currentPage === 'lending' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('lending')}
+        >
+          <span className="nav-icon">📣</span>
+          <span className="nav-label">Lending</span>
+        </button>
+      )}
+      {['borrower', 'both'].includes(currentUser?.userType) && (
+        <button 
+          className={`nav-item ${currentPage === 'collateral' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('collateral')}
+        >
+          <span className="nav-icon">📦</span>
+          <span className="nav-label">Collateral</span>
+        </button>
+      )}
       <button 
         className={`nav-item ${currentPage === 'chat' ? 'active' : ''}`}
         onClick={() => setCurrentPage('chat')}
@@ -60,6 +71,15 @@ const BottomNav = ({ currentPage, setCurrentPage, onLogout }) => {
         <span className="nav-icon">⚙️</span>
         <span className="nav-label">Settings</span>
       </button>
+      {currentUser?.isAdmin && (
+        <button 
+          className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('admin')}
+        >
+          <span className="nav-icon">🛠️</span>
+          <span className="nav-label">Admin</span>
+        </button>
+      )}
       <button
         className="nav-item logout-item"
         onClick={onLogout}

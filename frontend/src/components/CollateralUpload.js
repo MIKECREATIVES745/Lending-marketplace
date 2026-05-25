@@ -87,7 +87,7 @@ const CollateralUpload = ({ currentUser }) => {
         uploadData.append('files', file);
       });
 
-      const response = await collateralAPI.addCollateral(uploadData);
+      await collateralAPI.addCollateral(uploadData);
       
       setSuccess(`Collateral item "${formData.itemName}" added successfully!`);
       setFormData({

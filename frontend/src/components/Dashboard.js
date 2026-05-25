@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { loanAPI, collateralAPI, gigAPI } from '../utils/api';
 import '../styles/dashboard.css';
 
-const Dashboard = ({ currentUser, setCurrentPage }) => {
+const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
   const [loans, setLoans] = useState([]);
   const [stats, setStats] = useState({
     totalBalance: 0,
@@ -202,7 +202,12 @@ const Dashboard = ({ currentUser, setCurrentPage }) => {
                 <span className="q-category">{gig.category}</span>
                 <h4>{gig.title}</h4>
                 <p className="q-price">ZMW {gig.budget}</p>
-                <button className="btn btn-white btn-sm" onClick={() => setCurrentPage('gigs')}>Apply Now</button>
+                <button
+                  className="btn btn-white btn-sm"
+                  onClick={() => onQuickGigApply ? onQuickGigApply(gig) : setCurrentPage('gigs')}
+                >
+                  Apply Now
+                </button>
               </div>
             )) : (
               <>
@@ -210,19 +215,19 @@ const Dashboard = ({ currentUser, setCurrentPage }) => {
                   <span className="q-category">On-Campus Tutor</span>
                   <h4>Tutor (Computer Science)</h4>
                   <p className="q-price">ZMW 350</p>
-                  <button className="btn btn-white btn-sm">Apply Now</button>
+                  <button className="btn btn-white btn-sm" onClick={() => setCurrentPage('gigs')}>Apply Now</button>
                 </div>
                 <div className="quick-gig-card category-design">
                   <span className="q-category">Manual Labor</span>
                   <h4>Manual Labor (Event Setup)</h4>
                   <p className="q-price">ZMW 200</p>
-                  <button className="btn btn-white btn-sm">Apply Now</button>
+                  <button className="btn btn-white btn-sm" onClick={() => setCurrentPage('gigs')}>Apply Now</button>
                 </div>
                 <div className="quick-gig-card category-delivery">
                   <span className="q-category">On-Campus Runner</span>
                   <h4>Library Assistant</h4>
                   <p className="q-price">ZMW 180</p>
-                  <button className="btn btn-white btn-sm">Apply Now</button>
+                  <button className="btn btn-white btn-sm" onClick={() => setCurrentPage('gigs')}>Apply Now</button>
                 </div>
               </>
             )}

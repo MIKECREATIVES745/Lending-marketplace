@@ -108,6 +108,7 @@ router.post('/verify-email', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         userType: user.userType,
+        isAdmin: user.isAdmin || false,
         isEmailVerified: true
       }
     });
@@ -158,6 +159,7 @@ router.post('/login', async (req, res) => {
         computerNumber: user.computerNumber,
         creditScore: user.creditScore,
         userType: user.userType,
+        isAdmin: user.isAdmin || false,
         isEmailVerified: user.isEmailVerified
       }
     });
