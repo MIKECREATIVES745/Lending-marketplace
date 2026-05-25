@@ -91,6 +91,6 @@ npm start
 
 MIT License
 
-## Support
+## Support c
 
 For support, contact contact@mikecreatives.inc
