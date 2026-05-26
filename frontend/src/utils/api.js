@@ -99,7 +99,8 @@ export const lendingAPI = {
   getMyOffers: () => api.get('/lending/my-offers/list'),
   updateLendingOffer: (offerId, data) => api.put(`/lending/${offerId}`, data),
   deleteLendingOffer: (offerId) => api.delete(`/lending/${offerId}`),
-  applyForOffer: (offerId) => api.post(`/lending/${offerId}/apply`)
+  applyForOffer: (offerId) => api.post(`/lending/${offerId}/apply`),
+  updateApplicationStatus: (offerId, borrowerId, status) => api.patch(`/lending/${offerId}/applications/${borrowerId}/status`, { status })
 };
 
 // Gig APIs

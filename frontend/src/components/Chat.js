@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { chatAPI, userAPI } from '../utils/api';
 import '../styles/chat.css';
 
-const Chat = ({ currentUser }) => {
+const Chat = ({ currentUser, socket }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -10,8 +10,11 @@ const Chat = ({ currentUser }) => {
   const [recommendedUsers, setRecommendedUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [chatError, setChatError] = useState('');
+  const selectedConvRef = useRef(null);
 
   const currentUserId = currentUser?.id || currentUser?._id;
+
+  const totalUnread = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
   const fetchConversations = useCallback(async () => {
     if (!currentUserId) return;
@@ -37,7 +40,35 @@ const Chat = ({ currentUser }) => {
 
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+
+    // Ensure user joins their private room for real-time notifications
+    if (socket && currentUserId) {
+      socket.emit('join-user-room', currentUserId);
+    }
+  }, [fetchConversations, socket, currentUserId]);
+
+  // Keep ref updated for socket listener to avoid closure staleness
+  useEffect(() => {
+    selectedConvRef.current = selectedConversation;
+  }, [selectedConversation]);
+
+  // Listen for new messages in real-time
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('new-message', ({ conversationId, message }) => {
+      // If we are currently chatting in this specific conversation, append the message
+      if (selectedConvRef.current?._id === conversationId) {
+        setMessages(prev => [...prev, message]);
+      }
+      // Always refresh conversations to update the sidebar snippet/unread count
+      fetchConversations();
+    });
+
+    return () => {
+      socket.off('new-message');
+    };
+  }, [socket, fetchConversations]);
 
   useEffect(() => {
     const loadRecommendations = async () => {
@@ -120,7 +151,7 @@ const Chat = ({ currentUser }) => {
   return (
     <div className="chat-container">
       <div className="chat-sidebar">
-        <h3>Messages</h3>
+        <h3>Messages {totalUnread > 0 && <span className="total-unread-badge">({totalUnread})</span>}</h3>
         {chatError && <div className="alert alert-error">{chatError}</div>}
         <div className="conversations-list">
           {conversations.map(conv => {
@@ -141,6 +172,9 @@ const Chat = ({ currentUser }) => {
                   </p>
                   <small>{conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleDateString() : ''}</small>
                 </div>
+                {conv.unreadCount > 0 && (
+                  <div className="unread-indicator">{conv.unreadCount}</div>
+                )}
               </div>
             );
           })}
@@ -148,21 +182,24 @@ const Chat = ({ currentUser }) => {
 
         <div className="chat-recommendations">
           <h4>Start a new chat</h4>
-          {loadingUsers ? (
-            <p>Loading users...</p>
-          ) : recommendedUsers.length > 0 ? (
-            recommendedUsers.slice(0, 5).map(user => (
-              <button
-                key={user._id}
-                className="recommended-user"
-                onClick={() => startConversation(user)}
-              >
-                {user.firstName} {user.lastName}
-              </button>
-            ))
-          ) : (
-            <p className="text-muted">No recommended contacts available.</p>
-          )}
+          <div className="recommendations-horizontal">
+            {loadingUsers ? (
+              <p>Loading...</p>
+            ) : recommendedUsers.length > 0 ? (
+              recommendedUsers.slice(0, 8).map(user => (
+                <div
+                  key={user._id}
+                  className="recommended-user-chip"
+                  onClick={() => startConversation(user)}
+                >
+                  <div className="chip-avatar">{user.firstName?.charAt(0)}</div>
+                  <span>{user.firstName}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted">No contacts</p>
+            )}
+          </div>
         </div>
       </div>
 

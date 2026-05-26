@@ -38,7 +38,7 @@ const TermsConditions = ({ setCurrentPage }) => {
             <p>We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
             
             <h3>7. Contact Information</h3>
-            <p>For questions regarding these terms, contact us at contact@mikecreatives.inc</p>
+            <p>For questions regarding these terms, contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507</p>
           `
         });
       } finally {

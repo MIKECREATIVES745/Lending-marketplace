@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/bottom-nav.css';
 
-const BottomNav = ({ currentPage, setCurrentPage, currentUser, onLogout }) => {
+const BottomNav = ({ currentPage, setCurrentPage, currentUser, onLogout, unreadMessages = 0, notifications = 0 }) => {
   return (
     <nav className="bottom-nav">
       <button 
@@ -56,6 +56,7 @@ const BottomNav = ({ currentPage, setCurrentPage, currentUser, onLogout }) => {
       >
         <span className="nav-icon">💬</span>
         <span className="nav-label">Messages</span>
+        {unreadMessages > 0 && <span className="nav-badge">{unreadMessages}</span>}
       </button>
       <button 
         className={`nav-item ${currentPage === 'profile' ? 'active' : ''}`}

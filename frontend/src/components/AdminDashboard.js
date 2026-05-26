@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI, userAPI } from '../utils/api';
+import { 
+  BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
+} from 'recharts';
 import '../styles/index.css';
 
 const statusOptions = ['', 'pending', 'active', 'completed', 'defaulted', 'cancelled'];
@@ -63,6 +66,53 @@ const AdminDashboard = () => {
       }
     });
     fetchAdminData(params);
+  };
+
+  const prepareChartData = () => {
+    if (!transactions || transactions.length === 0) return [];
+    
+    const dailyStats = transactions.reduce((acc, tx) => {
+      const date = new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      if (!acc[date]) acc[date] = { name: date, Volume: 0, Revenue: 0 };
+      acc[date].Volume += tx.amount;
+      acc[date].Revenue += tx.platformRevenue;
+      return acc;
+    }, {});
+
+    return Object.values(dailyStats).sort((a, b) => new Date(a.name) - new Date(b.name));
+  };
+
+  const chartData = prepareChartData();
+
+  const prepareUserGrowthData = () => {
+    const allUsers = [...borrowers, ...lenders];
+    // Filter duplicates based on ID
+    const uniqueUsers = Array.from(new Map(allUsers.map(u => [u._id, u])).values());
+    
+    if (uniqueUsers.length === 0) return [];
+
+    const dailyGrowth = uniqueUsers.reduce((acc, user) => {
+      const date = new Date(user.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    const sortedDates = Object.keys(dailyGrowth).sort((a, b) => new Date(a) - new Date(b));
+    
+    let cumulative = 0;
+    return sortedDates.map(date => {
+      cumulative += dailyGrowth[date];
+      return { name: date, TotalUsers: cumulative, NewUsers: dailyGrowth[date] };
+    });
+  };
+
+  const preparePieData = () => {
+    if (!summary) return [];
+    return [
+      { name: 'Active', value: summary.totalActive, color: '#8b5cf6' },
+      { name: 'Completed', value: summary.totalCompleted, color: '#10b981' },
+      { name: 'Pending', value: summary.totalPending, color: '#f59e0b' }
+    ].filter(item => item.value > 0);
   };
 
   const downloadCSV = () => {
@@ -220,6 +270,67 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      <div className="card mb-4 mt-4">
+        <div className="section-heading mb-4">
+          <h3>📈 Platform Analytics</h3>
+          <p className="text-muted">Visualizing loan volume and platform revenue flow.</p>
+        </div>
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer>
+            <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} tickFormatter={(value) => `K${value}`} />
+              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+              <Legend verticalAlign="top" height={36}/>
+              <Bar dataKey="Volume" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Loan Volume" />
+              <Bar dataKey="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Platform Revenue" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+        <div className="card">
+          <div className="section-heading mb-4">
+            <h3>👥 User Growth</h3>
+            <p className="text-muted">Total registered users over time.</p>
+          </div>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart data={prepareUserGrowthData()}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                <Legend />
+                <Bar dataKey="NewUsers" name="New Users" fill="#06B6D4" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="section-heading mb-4">
+            <h3>📊 Loan Status Distribution</h3>
+            <p className="text-muted">Current status of all system loans.</p>
+          </div>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={preparePieData()} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {preparePieData().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
 
       <div className="card mt-4">
         <div className="section-heading">

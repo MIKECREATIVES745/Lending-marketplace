@@ -183,7 +183,7 @@ services:
 ### Test Connection
 ```bash
 # Test MongoDB connection
-mongosh "mongodb+srv://admin:PASSWORD@cluster.mongodb.net/" --eval "db.adminCommand('ping')"
+mongosh "mongodb+srv:admin:mikemy745@cluster.mongodb.net" --eval "db.adminCommand('ping')"
 
 # Test backend startup
 npm run dev
@@ -191,6 +191,8 @@ npm run dev
 # Test frontend build
 npm run build
 ```
+
+
 
 ## Common Issues
 

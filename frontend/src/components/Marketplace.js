@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { marketplaceAPI, loanAPI } from '../utils/api';
+import { marketplaceAPI, loanAPI, lendingAPI, chatAPI } from '../utils/api';
 import '../styles/marketplace.css';
 
-const Marketplace = ({ currentUser }) => {
+const Marketplace = ({ currentUser, setCurrentPage }) => {
   const [loans, setLoans] = useState([]);
   const [lenders, setLenders] = useState([]);
   const [activeTab, setActiveTab] = useState('browse');
@@ -113,6 +113,44 @@ const Marketplace = ({ currentUser }) => {
     } catch (error) {
       const errorText = error.response?.data?.error || error.response?.data?.message || error.message;
       setMessage(`❌ Error funding loan: ${errorText}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApplyToOffer = async (offerId) => {
+    setIsLoading(true);
+    setMessage('');
+    try {
+      await lendingAPI.applyForOffer(offerId);
+      setMessage('✅ Application submitted successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(`❌ Error applying: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMessageLender = async (lenderId) => {
+    // Robustly extract the target ID from the lender object or string
+    const targetId = lenderId?._id || lenderId?.id || lenderId;
+
+    if (!targetId || String(targetId) === String(userId)) {
+      setMessage('⚠️ You cannot message yourself.');
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage('');
+    try {
+      const res = await chatAPI.createConversation({ partnerId: targetId });
+      console.log('Conversation ready:', res.data);
+      if (setCurrentPage) {
+        setTimeout(() => setCurrentPage('chat'), 100);
+      }
+    } catch (error) {
+      setMessage(`❌ Error starting chat: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -255,38 +293,57 @@ const Marketplace = ({ currentUser }) => {
         {/* Browse Lenders Section - For Borrowers */}
         {activeTab === 'browse' && userType !== 'lender' && (
           <div className="lenders-section">
-            <p className="section-info">Browse verified lenders and connect with them to fund your loan request.</p>
+            <p className="section-info">Browse active lending offers from verified lenders.</p>
             <div className="lenders-grid">
-              {lenders.length > 0 ? lenders.map(lender => (
-                <div key={lender._id} className="card lender-card">
+              {lenders.length > 0 ? lenders.map(offer => (
+                <div key={offer._id} className="card lender-card offer-card">
                   <div className="lender-header">
                     <div className="lender-avatar">
-                      {lender.firstName?.charAt(0).toUpperCase()}
+                      {offer.lenderId?.firstName?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <h4>{lender.firstName} {lender.lastName}</h4>
-                      <p className="verified">✓ Verified Lender</p>
+                      <h4>{offer.lenderId?.firstName} {offer.lenderId?.lastName}</h4>
+                      <p className="verified">✓ {offer.lenderName || 'Verified Lender'}</p>
                     </div>
                   </div>
+
+                  <div className="offer-body mt-2">
+                    <div className="offer-amount">
+                      <p className="label">Lending Amount</p>
+                      <p className="amount">ZMW {offer.amount.toLocaleString()}</p>
+                    </div>
+                    <div className="offer-terms">
+                      <p>📈 {offer.interestRate}% Interest</p>
+                      <p>📅 {offer.loanTerm} Months</p>
+                    </div>
+                    {offer.description && <p className="offer-description mt-2">{offer.description}</p>}
+                  </div>
                   
-                  <div className="lender-stats">
+                  <div className="lender-stats mt-2">
                     <div className="stat">
                       <p className="label">Credit Score</p>
-                      <p className="value">{lender.creditScore || 'N/A'}</p>
-                    </div>
-                    <div className="stat">
-                      <p className="label">Total Lent</p>
-                      <p className="value">ZMW {(lender.totalLent || 0).toFixed(2)}</p>
+                      <p className="value">{offer.lenderId?.creditScore || 'N/A'}</p>
                     </div>
                   </div>
                   
-                  <div className="lender-bio">
-                    <p>📍 {lender.address?.city || 'City'}, {lender.address?.country || 'Country'}</p>
+                  <div className="marketplace-offer-actions mt-3" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <button 
+                      className="btn btn-primary btn-block action-btn-unified"
+                      onClick={() => handleApplyToOffer(offer._id)}
+                      disabled={isLoading}
+                    >
+                      Apply for Offer
+                    </button>
+                    <button 
+                      className="btn btn-primary btn-block action-btn-unified"
+                      onClick={() => handleMessageLender(offer.lenderId)}
+                      disabled={isLoading}
+                    >
+                      Message Lender
+                    </button>
                   </div>
-                  
-                  <button className="btn btn-secondary btn-block">Message Lender</button>
                 </div>
-              )) : <div className="card text-center p-3"><p>No lenders available</p></div>}
+              )) : <div className="card text-center p-3"><p>No lending offers available right now.</p></div>}
             </div>
           </div>
         )}

@@ -17,7 +17,15 @@ router.get('/conversations/:userId', auth, async (req, res) => {
       .populate({ path: 'lastMessage', select: 'message createdAt senderId' })
       .sort({ lastMessageTime: -1 });
     
-    res.json(conversations);
+    // Map conversations to include unread indicators for the UI
+    const conversationsWithMeta = conversations.map(conv => {
+      const plainConv = conv.toObject();
+      // If last message is from someone else, mark it as a pending unread for the badge
+      plainConv.unreadCount = (plainConv.lastMessage && String(plainConv.lastMessage.senderId) !== String(req.userId)) ? 1 : 0;
+      return plainConv;
+    });
+
+    res.json(conversationsWithMeta);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -109,6 +117,26 @@ router.post('/message', auth, async (req, res) => {
         updatedAt: new Date()
       }
     );
+
+    // Emit real-time notification and message event
+    const { io } = require('../index');
+    if (io) {
+      // Notify recipient of new message
+      io.to(recipientId.toString()).emit('new-message', {
+        conversationId,
+        message: newMessage
+      });
+
+      // Trigger general notification for the navbar count
+      io.to(recipientId.toString()).emit('notification', {
+        type: 'NEW_MESSAGE',
+        title: 'New Chat Message',
+        message: 'You have received a new message in your inbox',
+        conversationId,
+        senderId,
+        timestamp: new Date()
+      });
+    }
     
     res.status(201).json(newMessage);
   } catch (error) {

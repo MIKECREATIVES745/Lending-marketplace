@@ -1,14 +1,21 @@
+const path = require('path');
+const dotenv = require('dotenv');
+const fs = require('fs');
+
+// Robust .env loading
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log('✓ Environment variables loaded from:', envPath);
+} else {
+  console.warn('! Warning: .env file not found at:', envPath);
+}
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-const dotenv = require('dotenv');
-const envResult = dotenv.config({ path: path.resolve(__dirname, '../.env'), override: process.env.NODE_ENV !== 'production' });
-if (envResult.error) {
-  console.warn('No .env file loaded:', envResult.error.message);
-}
 
 const app = express();
 const server = http.createServer(app);
@@ -19,8 +26,6 @@ const io = socketIo(server, {
     credentials: true
   }
 });
-
-const User = require('./models/User');
 
 // Middleware
 app.use(cors({
@@ -40,42 +45,42 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lending-unza';
-console.log(`Connecting to MongoDB at ${mongoUri}`);
-mongoose.connect(mongoUri)
-  .then(async () => {
-    console.log('✓ MongoDB connected');
+const mongoURI = process.env.MONGODB_URI;
 
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
+if (!mongoURI) {
+  console.error('X Error: MONGODB_URI is not defined in your .env file.');
+  console.log('Please ensure c:\\Users\\Mutale\\LendingMarketplace\\backend\\.env exists and contains your connection string.');
+} else {
+  const isCloud = mongoURI.includes('mongodb.net');
+  console.log(`ℹ Information: Using ${isCloud ? 'Cloud (Atlas)' : 'Local'} connection string`);
+  
+  // Log masked URI for verification
+  console.log(`✓ Attempting connection to: ${mongoURI.replace(/:([^:@]+)@/, ':****@')}`);
+}
 
-    if (adminEmail && adminPassword) {
-      try {
-        let adminUser = await User.findOne({ email: adminEmail });
-        if (!adminUser) {
-          adminUser = new User({
-            firstName: process.env.ADMIN_FIRST_NAME || 'Admin',
-            lastName: process.env.ADMIN_LAST_NAME || 'Owner',
-            email: adminEmail,
-            password: adminPassword,
-            userType: 'lender',
-            isAdmin: true,
-            isEmailVerified: true
-          });
-          await adminUser.save();
-          console.log(`✓ Admin user created: ${adminEmail}`);
-        } else if (!adminUser.isAdmin || !adminUser.isEmailVerified) {
-          adminUser.isAdmin = true;
-          adminUser.isEmailVerified = true;
-          await adminUser.save();
-          console.log(`✓ Admin user updated to isAdmin: ${adminEmail}`);
-        }
-      } catch (seedError) {
-        console.error('✗ Admin seed error:', seedError);
-      }
+mongoose.set('strictQuery', false);
+
+// Only attempt connection if URI exists
+if (mongoURI) {
+  mongoose.connect(mongoURI, {
+  serverSelectionTimeoutMS: 5000, // Fail fast if connection cannot be established
+  connectTimeoutMS: 10000
+})
+  .then(() => console.log('✓ MongoDB connection successful'))
+  .catch(err => {
+    console.error('X MongoDB error:', err.message);
+    if (err.message.includes('ECONNREFUSED') && (err.message.includes('127.0.0.1') || err.message.includes('localhost'))) {
+      console.log('! Solution: Your app is trying to connect to a LOCAL database that isn\'t running.');
+      console.log('! Action: Ensure your .env MONGODB_URI contains your Atlas connection string.');
+    } else if (err.message.includes('querySrv ECONNREFUSED')) {
+      console.log('! Network Issue: Your DNS provider or firewall is blocking MongoDB SRV records.');
+      console.log('! Solution: Use the "Standard Connection String" (long format) from Atlas in your .env file.');
+      console.log('! Link: https://www.mongodb.com/docs/atlas/troubleshoot-connection/#special-characters-in-connection-string');
+    } else if (err.name === 'MongooseServerSelectionError') {
+      console.log('! Connection Error: Could not reach the cluster. Verify that your IP address is whitelisted in the MongoDB Atlas "Network Access" settings.');
     }
-  })
-  .catch(err => console.log('✗ MongoDB error:', err));
+  });
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

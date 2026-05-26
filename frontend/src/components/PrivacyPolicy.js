@@ -32,7 +32,7 @@ const PrivacyPolicy = ({ setCurrentPage }) => {
             <p>We do not sell your personal information to third parties. We may share information when required by law or to protect our rights.</p>
             
             <h3>5. Contact Us</h3>
-            <p>If you have questions about this Privacy Policy, please contact us at contact@mikecreatives.inc</p>
+            <p>If you have questions about this Privacy Policy, please contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507  </p>
           `
         });
       } finally {

@@ -32,7 +32,11 @@ const AdminLogin = ({ onLoginSuccess, onBack }) => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       onLoginSuccess(response.data.user);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login as admin');
+      if (err.code === 'ECONNREFUSED' || !err.response) {
+        setError('Server connection failed. Please ensure the backend is running.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to login as admin');
+      }
     } finally {
       setLoading(false);
     }

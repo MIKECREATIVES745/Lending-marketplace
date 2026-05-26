@@ -134,7 +134,7 @@ function App() {
             onQuickGigApply={handleQuickGigApply}
           />
         )}
-        {currentPage === 'marketplace' && <Marketplace currentUser={currentUser} />}
+        {currentPage === 'marketplace' && <Marketplace currentUser={currentUser} setCurrentPage={setCurrentPage} />}
         {currentPage === 'loans' && <Loans currentUser={currentUser} />}
         {currentPage === 'gigs' && (
           <GigBoard
@@ -245,4 +245,3 @@ function App() {
 }
 
 export default App;
-

@@ -7,7 +7,7 @@ router.get('/lenders/list', async (req, res) => {
   try {
     const lenders = await User.find({ 
       userType: { $in: ['lender', 'both'] },
-      verified: true 
+      isEmailVerified: true 
     }).select('-password -bankDetails');
     res.json(lenders);
   } catch (error) {
@@ -19,7 +19,7 @@ router.get('/borrowers/list', async (req, res) => {
   try {
     const borrowers = await User.find({ 
       userType: { $in: ['borrower', 'both'] },
-      verified: true 
+      isEmailVerified: true 
     }).select('-password -bankDetails');
     res.json(borrowers);
   } catch (error) {

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Loan = require('../models/Loan');
+const Gig = require('../models/Gig');
 const router = express.Router();
 
 const requireAdmin = async (req, res, next) => {
@@ -40,6 +41,28 @@ const buildLoanQuery = (query) => {
 
   return conditions;
 };
+
+// Admin Dashboard Stats (Gig-focused)
+router.get('/stats', auth, requireAdmin, async (req, res) => {
+  try {
+    const totalGigs = await Gig.countDocuments();
+    const openGigs = await Gig.countDocuments({ status: 'open' });
+    const inProgressGigs = await Gig.countDocuments({ status: 'in-progress' });
+    const completedGigs = await Gig.countDocuments({ status: 'completed' });
+
+    res.json({
+      stats: {
+        totalGigs,
+        openGigs,
+        inProgressGigs,
+        completedGigs
+      },
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.get('/summary', auth, requireAdmin, async (req, res) => {
   try {

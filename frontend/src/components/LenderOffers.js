@@ -74,6 +74,11 @@ const LenderOffers = ({ currentUser }) => {
       return;
     }
 
+    if (formData.amount <= 100) {
+      setMessage('❌ Lending amount must be greater than 100');
+      return;
+    }
+
     try {
       if (editingId) {
         await lendingAPI.updateLendingOffer(editingId, formData);
@@ -98,6 +103,27 @@ const LenderOffers = ({ currentUser }) => {
       fetchOffers();
 
       setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(`❌ Error: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const handleApplicationStatus = async (offerId, borrowerId, status) => {
+    if (!borrowerId) {
+      setMessage('❌ Error: Borrower ID is missing');
+      return;
+    }
+
+    const confirmMsg = status === 'accepted' 
+      ? 'Are you sure you want to accept this application? This will create an active loan and generate a QR code.'
+      : 'Are you sure you want to decline this application?';
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await lendingAPI.updateApplicationStatus(offerId, borrowerId, status);
+      setMessage(`✅ Application ${status}`);
+      fetchOffers();
     } catch (error) {
       setMessage(`❌ Error: ${error.response?.data?.error || error.message}`);
     }
@@ -179,8 +205,8 @@ const LenderOffers = ({ currentUser }) => {
                   onChange={handleInputChange}
                   placeholder="e.g., 50000"
                   required
-                  min="0"
-                  step="1000"
+                  min="101"
+                  step="1"
                 />
               </div>
 
@@ -356,6 +382,30 @@ const LenderOffers = ({ currentUser }) => {
 
               <div className="offer-stats">
                 <p>Applications: {offer.acceptedApplications?.length || 0}</p>
+                {offer.acceptedApplications?.length > 0 && (
+                  <div className="applicants-tray mt-3">
+                    {offer.acceptedApplications.map(app => (
+                      <div key={app.borrowerId?._id} className="applicant-mini-card">
+                        <div className="app-info">
+                          <strong>{app.borrowerId?.firstName} {app.borrowerId?.lastName}</strong>
+                          <span className={`app-status-badge ${app.status}`}>{app.status}</span>
+                        </div>
+                        {app.status === 'pending' && (
+                          <div className="app-btns">
+                            <button 
+                              className="btn btn-sm btn-success" 
+                              onClick={() => handleApplicationStatus(offer._id, app.borrowerId?._id || app.borrowerId, 'accepted')}
+                            >Accept</button>
+                            <button 
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleApplicationStatus(offer._id, app.borrowerId?._id || app.borrowerId, 'declined')}
+                            >Decline</button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="offer-actions">
