@@ -264,7 +264,7 @@ body {
 .main-content {
   flex: 1;
   padding: 1rem 0;
-  padding-bottom: 2rem;
+  padding-bottom: 80px;
   min-height: calc(100vh - 60px - 100px);
   overflow: auto;
 }
@@ -415,6 +415,6 @@ body.dark-mode .text-muted {
 
 @media (min-width: 768px) {
   .main-content {
-    padding-bottom: 2rem;
+    padding-bottom: 80px;
   }
 }
