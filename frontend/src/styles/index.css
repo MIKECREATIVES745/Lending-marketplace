@@ -273,7 +273,7 @@ body {
   margin-top: auto;
   background: #111827;
   border-top: 1px solid #374151;
-  padding: 1.25rem 0 100px 0; /* Increased padding to ensure "Created by Mikec" is fully visible */
+  padding: 1.25rem 0 140px 0; /* Further increased padding to ensure "Created by Mikec" is visible above the bottom nav */
   text-align: center;
   color: #d1d5db;
   font-size: 0.9rem;
