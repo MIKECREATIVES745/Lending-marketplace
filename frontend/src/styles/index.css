@@ -264,7 +264,7 @@ body {
 .main-content {
   flex: 1;
   padding: 1rem 0;
-  padding-bottom: 180px;
+  padding-bottom: 2rem;
   min-height: calc(100vh - 60px - 100px);
   overflow: auto;
 }
@@ -273,7 +273,7 @@ body {
   margin-top: auto;
   background: #111827;
   border-top: 1px solid #374151;
-  padding: 1.25rem 0;
+  padding: 1.25rem 0 85px 0; /* Extra bottom padding to clear the 70px nav bar */
   text-align: center;
   color: #d1d5db;
   font-size: 0.9rem;
@@ -415,6 +415,6 @@ body.dark-mode .text-muted {
 
 @media (min-width: 768px) {
   .main-content {
-    padding-bottom: 0;
+    padding-bottom: 2rem;
   }
 }

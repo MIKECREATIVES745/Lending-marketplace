@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://your-backend-name.onrender.com/api'; // <--- UPDATE THIS LINE
+const API_URL = process.env.REACT_APP_API_URL || 'https://smart-money-api.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
