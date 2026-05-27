@@ -114,8 +114,8 @@ router.post('/', auth, async (req, res) => {
 router.get('/my-posts', auth, async (req, res) => {
   try {
     const gigs = await Gig.find({ posterId: req.userId })
-      .populate('applicants.userId', 'firstName lastName profileImage')
-      .populate('assignedWorkerId', 'firstName lastName profileImage');
+      .populate('applicants.userId', 'firstName lastName profileImage email phone')
+      .populate('assignedWorkerId', 'firstName lastName profileImage email phone');
     res.json({
       data: gigs,
       total: gigs.length
@@ -129,7 +129,7 @@ router.get('/my-posts', auth, async (req, res) => {
 router.get('/my-jobs', auth, async (req, res) => {
   try {
     const gigs = await Gig.find({ assignedWorkerId: req.userId })
-      .populate('posterId', 'firstName lastName profileImage');
+      .populate('posterId', 'firstName lastName profileImage email phone');
     res.json({
       data: gigs,
       total: gigs.length
@@ -144,8 +144,8 @@ router.get('/:id', async (req, res) => {
   try {
     const gig = await Gig.findById(req.params.id)
       .populate('posterId', 'firstName lastName profileImage email phone')
-      .populate('assignedWorkerId', 'firstName lastName profileImage')
-      .populate('applicants.userId', 'firstName lastName profileImage email');
+      .populate('assignedWorkerId', 'firstName lastName profileImage email phone')
+      .populate('applicants.userId', 'firstName lastName profileImage email phone');
     
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
     res.json(gig);
@@ -161,6 +161,11 @@ router.post('/:id/apply', auth, async (req, res) => {
     const gig = await Gig.findById(req.params.id);
 
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
+
+    // Prevent poster from applying to their own gig
+    if (gig.posterId.toString() === req.userId) {
+      return res.status(400).json({ error: 'You cannot apply for a gig you posted' });
+    }
 
     // Check if already applied
     const alreadyApplied = gig.applicants.some(app => app.userId.toString() === req.userId);
@@ -207,10 +212,10 @@ router.post('/:id/hire', auth, async (req, res) => {
     // Notify the worker
     const { io } = require('../index');
     if (io) {
-      io.to(workerId).emit('notification', {
-        type: 'GIG_HIRED',
-        title: 'You have been hired!',
-        message: `You were hired for the gig: ${gig.title}`,
+      io.to(workerId.toString()).emit('notification', {
+        type: 'GIG_APPLICATION_ACCEPTED',
+        title: 'Application Accepted! 🎉',
+        message: `Your application for "${gig.title}" has been accepted. You can now contact the poster.`,
         gigId: gig._id,
         timestamp: new Date()
       });
@@ -244,6 +249,12 @@ router.post('/:id/confirm', auth, async (req, res) => {
       gig.status = 'completed';
       gig.escrowStatus = 'released';
 
+      // Calculate 10% platform fee as revenue
+      const platformFee = gig.budget * 0.10;
+      gig.platformFee = platformFee;
+      gig.netWorkerPay = gig.budget - platformFee;
+      gig.updatedAt = new Date(); // Crucial for revenue reporting and date filters
+
       // Update worker and poster financial stats (simplified)
       const User = require('../models/User');
       await User.findByIdAndUpdate(gig.assignedWorkerId, { $inc: { successfulPayments: 1 } });
@@ -272,4 +283,44 @@ router.post('/:id/confirm', auth, async (req, res) => {
   }
 });
 
+// Decline a gig application
+router.post('/:id/applicants/:applicantId/decline', auth, async (req, res) => {
+  try {
+    const gig = await Gig.findById(req.params.id);
+    if (!gig) return res.status(404).json({ error: 'Gig not found' });
+
+    // Verify poster ownership
+    if (gig.posterId.toString() !== req.userId) {
+      return res.status(403).json({ error: 'Only the gig poster can decline applications' });
+    }
+
+    const applicantIndex = gig.applicants.findIndex(
+      app => app.userId.toString() === req.params.applicantId
+    );
+
+    if (applicantIndex === -1) {
+      return res.status(404).json({ error: 'Applicant not found for this gig' });
+    }
+
+    // Remove the applicant
+    gig.applicants.splice(applicantIndex, 1);
+    await gig.save();
+
+    // Notify the declined applicant
+    const { io } = require('../index');
+    if (io) {
+      io.to(req.params.applicantId).emit('notification', {
+        type: 'GIG_APPLICATION_DECLINED',
+        title: 'Gig Application Update',
+        message: `Your application for "${gig.title}" was declined.`,
+        gigId: gig._id,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({ message: 'Application declined successfully', gig });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;

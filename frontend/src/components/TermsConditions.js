@@ -16,29 +16,29 @@ const TermsConditions = ({ setCurrentPage }) => {
         setContent({
           title: 'Terms & Conditions',
           content: `
-            <h2>Terms & Conditions for Smart Money</h2>
-            <p>Last Updated: ${new Date().toLocaleDateString()}</p>
+            <h2 style="margin-bottom: 1.5rem;">Terms & Conditions for Smart Money</h2>
+            <p style="margin-bottom: 1.5rem;">Last Updated: ${new Date().toLocaleDateString()}</p>
             
-            <h3>1. Acceptance of Terms</h3>
-            <p>By accessing and using Smart Money, you accept and agree to be bound by the terms and provision of this agreement.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">1. Acceptance of Terms</h3>
+            <p style="margin-bottom: 1.5rem;">By accessing and using Smart Money, you accept and agree to be bound by the terms and provision of this agreement.</p>
             
-            <h3>2. User Responsibilities</h3>
-            <p>Users are responsible for maintaining the confidentiality of their account information and passwords. You agree to accept responsibility for all activities that occur under your account.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">2. User Responsibilities</h3>
+            <p style="margin-bottom: 1.5rem;">Users are responsible for maintaining the confidentiality of their account information and passwords. You agree to accept responsibility for all activities that occur under your account.</p>
             
-            <h3>3. Prohibited Activities</h3>
-            <p>You may not use the platform for any illegal purposes, harassment, fraud, or misrepresentation. Users must treat other users with respect and professionalism.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">3. Prohibited Activities</h3>
+            <p style="margin-bottom: 1.5rem;">You may not use the platform for any illegal purposes, harassment, fraud, or misrepresentation. Users must treat other users with respect and professionalism.</p>
             
-            <h3>4. Limitation of Liability</h3>
-            <p>Smart Money is provided on an "as-is" basis. We do not guarantee the accuracy of user-posted content or the success of any transactions.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">4. Limitation of Liability</h3>
+            <p style="margin-bottom: 1.5rem;">Smart Money is provided on an "as-is" basis. We do not guarantee the accuracy of user-posted content or the success of any transactions.</p>
             
-            <h3>5. Dispute Resolution</h3>
-            <p>Any disputes arising from the use of this platform will be governed by Zambian law and resolved through appropriate legal channels.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">5. Dispute Resolution</h3>
+            <p style="margin-bottom: 1.5rem;">Any disputes arising from the use of this platform will be governed by Zambian law and resolved through appropriate legal channels.</p>
             
-            <h3>6. Changes to Terms</h3>
-            <p>We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">6. Changes to Terms</h3>
+            <p style="margin-bottom: 1.5rem;">We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
             
-            <h3>7. Contact Information</h3>
-            <p>For questions regarding these terms, contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">7. Contact Information</h3>
+            <p style="margin-bottom: 1.5rem;">For questions regarding these terms, contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507</p>
           `
         });
       } finally {

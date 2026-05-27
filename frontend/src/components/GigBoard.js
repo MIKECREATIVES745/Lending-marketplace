@@ -23,7 +23,7 @@ const gigIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitialGigToApply }) => {
+const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitialGigToApply, socket }) => {
   const [gigs, setGigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
@@ -55,6 +55,24 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
   const [gigToApply, setGigToApply] = useState(null);
   const [applyMessage, setApplyMessage] = useState('');
   const [applyLoading, setApplyLoading] = useState(false);
+
+  // Fetch full details when a poster selects their own gig to show applicants
+  useEffect(() => {
+    const loadFullGigDetails = async () => {
+      if (selectedGig && isPoster(selectedGig.posterId)) {
+        // Only fetch if we don't have populated applicant data yet
+        if (selectedGig.applicants?.length > 0 && typeof selectedGig.applicants[0].userId === 'string') {
+          try {
+            const res = await gigAPI.getGigById(selectedGig._id);
+            setSelectedGig(res.data);
+          } catch (err) {
+            console.error('Error fetching populated gig details:', err);
+          }
+        }
+      }
+    };
+    loadFullGigDetails();
+  }, [selectedGig?._id]);
 
   useEffect(() => {
     if (initialGigToApply && initialGigToApply._id) {
@@ -160,6 +178,31 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
       setTimeout(() => setMessage(''), 3000);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleHireWorker = async (gigId, workerId) => {
+    try {
+      setLoading(true);
+      await gigAPI.hireWorker(gigId, workerId);
+      setMessage('✅ Worker hired successfully! Escrow initiated.');
+      setSelectedGig(null);
+      fetchGigs();
+    } catch (error) {
+      setMessage('❌ Hiring failed: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeclineApplicant = async (gigId, applicantId) => {
+    try {
+      await gigAPI.declineApplication(gigId, applicantId);
+      const res = await gigAPI.getGigById(gigId);
+      setSelectedGig(res.data);
+      setMessage('✅ Application declined');
+    } catch (error) {
+      setMessage('❌ Action failed: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -394,6 +437,14 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                       <span className="label">Applicants:</span>
                       <span className="value">{gig.applicants?.length || 0}</span>
                     </div>
+                </div>
+
+                <div className="gig-footer-meta">
+                  {isPoster(gig.posterId) && (
+                    <div className="own-post-tag" style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '5px' }}>
+                      ⭐ Your Post - Manage Applicants
+                    </div>
+                  )}
                   </div>
 
                   <div className="gig-poster">
@@ -622,6 +673,54 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                 <span className="label">Applicants:</span>
                 <span className="value">{selectedGig.applicants?.length || 0}</span>
               </div>
+
+              {/* Applicant Management for Poster */}
+              {isPoster(selectedGig.posterId) && selectedGig.status === 'open' && (
+                <div className="applicants-management-box mt-4 p-4" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '15px' }}>👥 Applicants Management</h4>
+                  {selectedGig.applicants?.length > 0 ? (
+                    <div className="applicants-list mt-2">
+                      {selectedGig.applicants.map(app => (
+                        <div key={app.userId?._id} className="applicant-item p-3 mb-3" style={{ backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <strong>{app.userId?.firstName} {app.userId?.lastName}</strong>
+                              <p className="mb-0 small">📞 {app.userId?.phone || 'N/A'} | 📧 {app.userId?.email}</p>
+                              {app.message && <p className="mt-1 font-italic small">"{app.message}"</p>}
+                            </div>
+                            <div className="action-btns">
+                              <button className="btn btn-sm btn-primary" onClick={() => handleHireWorker(selectedGig._id, app.userId?._id)}>Hire</button>
+                              <button className="btn btn-sm btn-outline-danger ml-2" onClick={() => handleDeclineApplicant(selectedGig._id, app.userId?._id)}>Decline</button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No one has applied yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Contact Information (Visible only after hiring) */}
+              {(selectedGig.status === 'in-progress' || selectedGig.status === 'payment-pending' || selectedGig.status === 'completed') && (
+                <div className="contact-info-box card mt-3 p-3" style={{ borderLeft: '4px solid #8B5CF6', backgroundColor: '#f9f7ff' }}>
+                  <h4>📞 Contact Details</h4>
+                  {isPoster(selectedGig.posterId) ? (
+                    <div className="contact-details">
+                      <p><strong>Worker:</strong> {selectedGig.assignedWorkerId?.firstName} {selectedGig.assignedWorkerId?.lastName}</p>
+                      <p><strong>Phone:</strong> {selectedGig.assignedWorkerId?.phone || 'Not provided'}</p>
+                      <p><strong>Email:</strong> {selectedGig.assignedWorkerId?.email}</p>
+                    </div>
+                  ) : (
+                    <div className="contact-details">
+                      <p><strong>Poster:</strong> {selectedGig.posterId?.firstName} {selectedGig.posterId?.lastName}</p>
+                      <p><strong>Phone:</strong> {selectedGig.posterId?.phone || 'Not provided'}</p>
+                      <p><strong>Email:</strong> {selectedGig.posterId?.email}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="description">
                 <h4>Description</h4>

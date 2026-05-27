@@ -16,23 +16,23 @@ const PrivacyPolicy = ({ setCurrentPage }) => {
         setContent({
           title: 'Privacy Policy',
           content: `
-            <h2>Privacy Policy for Smart Money</h2>
-            <p>Last Updated: ${new Date().toLocaleDateString()}</p>
+            <h2 style="margin-bottom: 1.5rem;">Privacy Policy for Smart Money</h2>
+            <p style="margin-bottom: 1.5rem;">Last Updated: ${new Date().toLocaleDateString()}</p>
             
-            <h3>1. Information We Collect</h3>
-            <p>We collect information you provide directly to us, such as when you create an account, post a gig, or communicate with other users. This includes your name, email address, phone number, and location.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">1. Information We Collect</h3>
+            <p style="margin-bottom: 1.5rem;">We collect information you provide directly to us, such as when you create an account, post a gig, or communicate with other users. This includes your name, email address, phone number, and location.</p>
             
-            <h3>2. How We Use Your Information</h3>
-            <p>We use the information we collect to operate and improve our services, process transactions, send you technical notices, and respond to your inquiries.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">2. How We Use Your Information</h3>
+            <p style="margin-bottom: 1.5rem;">We use the information we collect to operate and improve our services, process transactions, send you technical notices, and respond to your inquiries.</p>
             
-            <h3>3. Data Security</h3>
-            <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access or alteration.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">3. Data Security</h3>
+            <p style="margin-bottom: 1.5rem;">We implement appropriate technical and organizational measures to protect your personal information against unauthorized access or alteration.</p>
             
-            <h3>4. Third-Party Sharing</h3>
-            <p>We do not sell your personal information to third parties. We may share information when required by law or to protect our rights.</p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">4. Third-Party Sharing</h3>
+            <p style="margin-bottom: 1.5rem;">We do not sell your personal information to third parties. We may share information when required by law or to protect our rights.</p>
             
-            <h3>5. Contact Us</h3>
-            <p>If you have questions about this Privacy Policy, please contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507  </p>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">5. Contact Us</h3>
+            <p style="margin-bottom: 1.5rem;">If you have questions about this Privacy Policy, please contact us at mikecreatives745@gmail.com or WhatsApp us on 0975132507  </p>
           `
         });
       } finally {

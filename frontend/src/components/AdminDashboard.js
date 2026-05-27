@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI, userAPI } from '../utils/api';
 import { 
-  BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
+  BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import '../styles/index.css';
 
@@ -74,8 +74,8 @@ const AdminDashboard = () => {
     const dailyStats = transactions.reduce((acc, tx) => {
       const date = new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
       if (!acc[date]) acc[date] = { name: date, Volume: 0, Revenue: 0 };
-      acc[date].Volume += tx.amount;
-      acc[date].Revenue += tx.platformRevenue;
+      acc[date].Volume += (tx.amount || 0);
+      acc[date].Revenue += (tx.platformRevenue || 0);
       return acc;
     }, {});
 
@@ -83,6 +83,28 @@ const AdminDashboard = () => {
   };
 
   const chartData = prepareChartData();
+
+  const prepareRevenueTrendData = () => {
+    if (!transactions || transactions.length === 0) return [];
+    
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dailyStats = transactions
+      .filter(tx => new Date(tx.createdAt) >= thirtyDaysAgo)
+      .reduce((acc, tx) => {
+        const date = new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        if (!acc[date]) acc[date] = { name: date, LoanRevenue: 0, GigRevenue: 0 };
+        
+        if (tx.type === 'Loan') acc[date].LoanRevenue += (tx.platformRevenue || 0);
+        if (tx.type === 'Gig') acc[date].GigRevenue += (tx.platformRevenue || 0);
+        return acc;
+      }, {});
+
+    return Object.values(dailyStats).sort((a, b) => new Date(a.name) - new Date(b.name));
+  };
+
+  const revenueTrendData = prepareRevenueTrendData();
 
   const prepareUserGrowthData = () => {
     const allUsers = [...borrowers, ...lenders];
@@ -257,6 +279,10 @@ const AdminDashboard = () => {
             <p className="amount">ZMW {summary.totalPlatformFees.toFixed(2)}</p>
           </div>
           <div className="card">
+            <h3>Gig Platform Fees (10%)</h3>
+            <p className="amount" style={{ color: '#10b981' }}>ZMW {summary.gigFees?.toFixed(2) || '0.00'}</p>
+          </div>
+          <div className="card">
             <h3>Funded Loans</h3>
             <p className="amount">{summary.totalLoansFunded}</p>
           </div>
@@ -270,6 +296,36 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      <div className="card mb-4 mt-4">
+        <div className="section-heading mb-4">
+          <h3>💰 Revenue Breakdown (Last 30 Days)</h3>
+          <p className="text-muted">Comparing earnings from Loans vs Gigs.</p>
+        </div>
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer>
+            <AreaChart data={revenueTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorLoan" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorGig" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} tickFormatter={(v) => `K${v}`} />
+              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+              <Legend verticalAlign="top" height={36}/>
+              <Area type="monotone" dataKey="LoanRevenue" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorLoan)" name="Loan Revenue" />
+              <Area type="monotone" dataKey="GigRevenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorGig)" name="Gig Revenue" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
       <div className="card mb-4 mt-4">
         <div className="section-heading mb-4">
@@ -345,7 +401,9 @@ const AdminDashboard = () => {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Loan</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>ID</th>
                   <th>Borrower</th>
                   <th>Lender</th>
                   <th>Amount</th>
@@ -358,6 +416,19 @@ const AdminDashboard = () => {
               <tbody>
                 {transactions.map((tx) => (
                   <tr key={tx.id}>
+                    <td>
+                      <span className={`badge ${tx.type === 'Gig' ? 'badge-info' : 'badge-primary'}`}>
+                        {tx.type}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                      {new Date(tx.createdAt).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </td>
                     <td>{tx.loanId}</td>
                     <td>{tx.borrower}</td>
                     <td>{tx.lender}</td>

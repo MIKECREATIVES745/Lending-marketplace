@@ -32,7 +32,7 @@ const workerIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const GigScout = ({ currentUser }) => {
+const GigScout = ({ currentUser, socket }) => {
   const [gigs, setGigs] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [view, setView] = useState('gigs'); // 'gigs', 'workers', or 'dashboard'
@@ -82,6 +82,33 @@ const GigScout = ({ currentUser }) => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Real-time notification listener to alert user instantly
+  useEffect(() => {
+    const userId = currentUser?.id || currentUser?._id;
+    if (!socket || !userId) return;
+
+    socket.emit('join-user-room', userId);
+
+    const handleNotification = (notif) => {
+      // Play sound effect
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(e => console.log('Audio error:', e));
+      } catch (err) {}
+
+      // Refresh data if notification is gig-related
+      if (['GIG_APPLICATION', 'GIG_APPLICATION_ACCEPTED', 'GIG_CONFIRMATION', 'GIG_APPLICATION_DECLINED'].includes(notif.type)) {
+        fetchData();
+        // Show a local message/toast to alert user instantly on their current page
+        setMessage(`🔔 ${notif.title}: ${notif.message}`);
+        setTimeout(() => setMessage(''), 6000);
+      }
+    };
+
+    socket.on('notification', handleNotification);
+    return () => socket.off('notification', handleNotification);
+  }, [socket, currentUser, fetchData]);
 
   const handlePostGig = async (e) => {
     e.preventDefault();
@@ -161,6 +188,30 @@ const GigScout = ({ currentUser }) => {
     }
   };
 
+  const handleDeclineApplication = async (gigId, applicantId) => {
+    try {
+      setLoading(true);
+      await gigAPI.declineApplication(gigId, applicantId);
+      setMessage('✅ Application declined successfully!');
+      setTimeout(() => setMessage(''), 3000);
+      fetchData();
+    } catch (error) {
+      console.error('Error declining application:', error);
+      setMessage('❌ Failed to decline application: ' + (error.response?.data?.error || error.message));
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if current user is the poster
+  const userId = currentUser?.id || currentUser?._id;
+  const isPoster = (poster) => {
+    if (!userId || !poster) return false;
+    const pId = typeof poster === 'string' ? poster : poster._id || poster.id;
+    return String(userId) === String(pId);
+  };
+
   const renderDashboard = () => (
     <div className="gig-dashboard">
       <div className="dashboard-section">
@@ -175,10 +226,12 @@ const GigScout = ({ currentUser }) => {
                 {gig.status === 'open' && (
                   <div className="applicants-list mt-2">
                     <h5>Applicants ({gig.applicants?.length || 0}):</h5>
-                    {gig.applicants?.map(app => (
-                      <div key={app.userId._id} className="applicant-item">
-                        <span>{app.userId.firstName} {app.userId.lastName}</span>
-                        <button className="btn btn-small btn-primary" onClick={() => handleHire(gig._id, app.userId._id)}>Hire</button>
+                    {gig.applicants?.map(app => app.userId && (
+                      <div key={app.userId._id || app.userId} className="applicant-item">
+                        <span>{app.userId.firstName || 'User'} {app.userId.lastName || ''}</span><br/>
+                        <small>📞 {app.userId.phone || 'N/A'} | 📧 {app.userId.email || 'N/A'}</small>
+                        <button className="btn btn-small btn-primary" onClick={() => handleHire(gig._id, app.userId._id || app.userId)}>Hire</button>
+                        <button className="btn btn-small btn-outline-danger ml-2" onClick={() => handleDeclineApplication(gig._id, app.userId._id || app.userId)}>Decline</button>
                       </div>
                     ))}
                   </div>
@@ -186,6 +239,7 @@ const GigScout = ({ currentUser }) => {
                 {gig.status === 'in-progress' || gig.status === 'payment-pending' ? (
                   <div className="status-actions mt-2">
                     <p>Worker: {gig.assignedWorkerId?.firstName} {gig.assignedWorkerId?.lastName}</p>
+                    <p>📞 Contact: {gig.assignedWorkerId?.phone || 'No phone'} | 📧 {gig.assignedWorkerId?.email}</p>
                     {!gig.posterConfirmation && (
                       <button className="btn btn-primary btn-small" onClick={() => handleConfirm(gig._id)}>Confirm Completion & Release Payment</button>
                     )}
@@ -210,6 +264,7 @@ const GigScout = ({ currentUser }) => {
               <div className="job-info">
                 <h4>{job.title}</h4>
                 <p>Client: {job.posterId?.firstName} {job.posterId?.lastName}</p>
+                <p>📞 Contact: {job.posterId?.phone || 'No phone'} | 📧 {job.posterId?.email}</p>
                 <p>Budget: ZMW {job.budget} | Escrow: {job.escrowStatus}</p>
                 {(job.status === 'in-progress' || job.status === 'payment-pending') && !job.workerConfirmation && (
                   <button className="btn btn-primary btn-small mt-2" onClick={() => handleConfirm(job._id)}>Mark as Completed</button>
@@ -244,7 +299,9 @@ const GigScout = ({ currentUser }) => {
                 <div className="map-popup">
                   <h4>{gig.title}</h4>
                   <p>Budget: ZMW {gig.budget}</p>
-                  <button className="btn btn-small btn-primary" onClick={() => handleApply(gig._id)}>Apply</button>
+                  {!isPoster(gig.posterId) && (
+                    <button className="btn btn-small btn-primary" onClick={() => handleApply(gig._id)}>Apply</button>
+                  )}
                 </div>
               </Popup>
             </Marker>
@@ -304,12 +361,25 @@ const GigScout = ({ currentUser }) => {
                       <p className="job-price">ZMW {gig.budget}</p>
                       <p className="job-applicants">{gig.applicants?.length || 0} applicants</p>
                     </div>
-                    <button
-                      className="btn btn-dark"
-                      onClick={() => handleApply(gig._id)}
-                    >
-                      Apply Now
-                    </button>
+
+                    {/* Direct link to management if it's the poster's own gig */}
+                    {isPoster(gig.posterId) && (
+                      <button 
+                        className="btn btn-small btn-outline-primary mb-2"
+                        onClick={() => setView('dashboard')}
+                      >
+                        Manage Applications
+                      </button>
+                    )}
+
+                    {!isPoster(gig.posterId) && (
+                      <button
+                        className="btn btn-dark"
+                        onClick={() => handleApply(gig._id)}
+                      >
+                        Apply Now
+                      </button>
+                    )}
                   </div>
                 </div>
               )) : (

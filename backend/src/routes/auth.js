@@ -34,24 +34,38 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
+    // Build confirmation link for better mobile experience
+    // Production: Ensure FRONTEND_URL is set in Render to your frontend domain (e.g. Vercel)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const confirmationLink = `${frontendUrl}/verify?email=${encodeURIComponent(user.email)}&code=${verificationCode}`;
+
     // Send verification email
     try {
       await sendEmail({
         email: user.email,
         subject: 'Verify your Smart Money account',
-        message: `Your verification code is: ${verificationCode}. It expires in 1 hour.`,
+        message: `Your verification code is: ${verificationCode}. It expires in 1 hour. You can also verify here: ${confirmationLink}`,
         html: `
-          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
-            <h2 style="color: #5B21B6;">Welcome to Smart Money!</h2>
-            <p>Hi ${firstName},</p>
-            <p>Thank you for joining our platform. Please use the following 6-digit code to verify your email address:</p>
-            <div style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #5B21B6; margin: 20px 0;">
-              ${verificationCode}
+          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; color: #374151;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <div style="display: inline-block; width: 64px; height: 64px; background-color: #f5f3ff; border-radius: 16px; line-height: 64px; font-size: 32px; margin-bottom: 12px;">💰</div>
+              <h1 style="color: #8B5CF6; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Smart Money</h1>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">Empowering Students for Financial Freedom</p>
             </div>
-            <p>This code will expire in 1 hour.</p>
-            <p>If you didn't sign up for Smart Money, you can safely ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #eee;" />
-            <p style="font-size: 12px; color: #666;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+            <h2 style="color: #111827; font-size: 20px; font-weight: 700; margin-bottom: 16px;">Verify Your Account</h2>
+            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">Hi ${firstName},</p>
+            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">Welcome to Smart Money! We're thrilled to have you join our community. To get started, please use the 6-digit verification code below:</p>
+            <div style="background-color: #f5f3ff; border-radius: 16px; padding: 30px; text-align: center; margin: 32px 0; border: 2px dashed #8B5CF6;">
+              <span style="font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #8B5CF6;">${verificationCode}</span>
+            </div>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${confirmationLink}" style="display: inline-block; padding: 16px 32px; background-color: #8B5CF6; color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);">Verify My Account</a>
+            </div>
+            <p style="font-size: 14px; color: #9ca3af; line-height: 1.6; text-align: center;">This code will expire in 1 hour.<br />If you didn't sign up for an account, please ignore this email.</p>
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f3f4f6; text-align: center;">
+              <p style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+              <p style="font-size: 12px; color: #9ca3af;">University of Zambia (UNZA), Lusaka</p>
+            </div>
           </div>
         `
       });
@@ -60,8 +74,6 @@ router.post('/register', async (req, res) => {
       // We don't return error here because the user is still created in DB
       // In production, you might want to handle this differently
     }
-
-    console.log(`[Verification] Code for ${email}: ${verificationCode}`);
 
     res.json({
       message: 'Registration initiated. Please verify your email.',
@@ -133,7 +145,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if email is verified
-    if (!user.isEmailVerified && user.emailVerificationCode) {
+    if (!user.isEmailVerified) {
       return res.status(403).json({
         error: 'Email not verified',
         needsVerification: true,
@@ -191,32 +203,44 @@ router.post('/forgot-password', async (req, res) => {
     user.passwordResetExpires = Date.now() + 900000; // 15 minutes
     await user.save();
 
+    // Build reset link
+    // Production: Ensure FRONTEND_URL is set in Render to your frontend domain (e.g. Vercel)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetLink = `${frontendUrl}/reset-password?email=${encodeURIComponent(user.email)}&code=${resetCode}`;
+
     // Send reset email
     try {
       await sendEmail({
         email: user.email,
         subject: 'Reset your Smart Money password',
-        message: `Your password reset code is: ${resetCode}. It expires in 15 minutes.`,
+        message: `Your password reset code is: ${resetCode}. It expires in 15 minutes. You can reset here: ${resetLink}`,
         html: `
-          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
-            <h2 style="color: #5B21B6;">Password Reset Request</h2>
-            <p>Hi ${user.firstName},</p>
-            <p>We received a request to reset your Smart Money password. Use this 6-digit code to reset it:</p>
-            <div style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #5B21B6; margin: 20px 0;">
-              ${resetCode}
+          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; color: #374151;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <div style="display: inline-block; width: 64px; height: 64px; background-color: #fef2f2; border-radius: 16px; line-height: 64px; font-size: 32px; margin-bottom: 12px;">🔑</div>
+              <h1 style="color: #8B5CF6; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Smart Money</h1>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">Empowering Students for Financial Freedom</p>
             </div>
-            <p>This code will expire in 15 minutes.</p>
-            <p>If you didn't request a password reset, you can safely ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #eee;" />
-            <p style="font-size: 12px; color: #666;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+            <h2 style="color: #111827; font-size: 20px; font-weight: 700; margin-bottom: 16px;">Password Reset Request</h2>
+            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">Hi ${user.firstName},</p>
+            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">We received a request to reset your password. Use the code below to securely access your account:</p>
+            <div style="background-color: #fef2f2; border-radius: 16px; padding: 30px; text-align: center; margin: 32px 0; border: 2px dashed #ef4444;">
+              <span style="font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #ef4444;">${resetCode}</span>
+            </div>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${resetLink}" style="display: inline-block; padding: 16px 32px; background-color: #ef4444; color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">Reset My Password</a>
+            </div>
+            <p style="font-size: 14px; color: #9ca3af; line-height: 1.6; text-align: center;">This code will expire in 15 minutes.<br />If you didn't request this, you can safely ignore this email.</p>
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f3f4f6; text-align: center;">
+              <p style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">© ${new Date().getFullYear()} Smart Money · Mikecreatives Inc</p>
+              <p style="font-size: 12px; color: #9ca3af;">University of Zambia (UNZA), Lusaka</p>
+            </div>
           </div>
         `
       });
     } catch (emailError) {
       console.error('Password reset email failed:', emailError);
     }
-
-    console.log(`[Password Reset] Code for ${email}: ${resetCode}`);
 
     res.json({
       message: 'If an account exists with this email, a reset link has been sent.'

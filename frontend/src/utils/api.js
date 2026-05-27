@@ -113,7 +113,8 @@ export const gigAPI = {
   getMyGigs: () => api.get('/gigs/my-posts'),
   getMyJobs: () => api.get('/gigs/my-jobs'),
   hireWorker: (gigId, workerId) => api.post(`/gigs/${gigId}/hire`, { workerId }),
-  confirmGig: (gigId) => api.post(`/gigs/${gigId}/confirm`)
+  confirmGig: (gigId) => api.post(`/gigs/${gigId}/confirm`),
+  declineApplication: (gigId, applicantId) => api.post(`/gigs/${gigId}/applicants/${applicantId}/decline`)
 };
 
 // Site Content APIs

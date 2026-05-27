@@ -1,6 +1,7 @@
 const path = require('path');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const initCleanupTask = require('./routes/cleanup');
 
 // Robust .env loading
 const envPath = path.resolve(__dirname, '../.env');
@@ -65,7 +66,7 @@ if (mongoURI) {
   mongoose.connect(mongoURI, {
   serverSelectionTimeoutMS: 5000, // Fail fast if connection cannot be established
   connectTimeoutMS: 10000
-})
+  })
   .then(() => console.log('✓ MongoDB connection successful'))
   .catch(err => {
     console.error('X MongoDB error:', err.message);
@@ -81,6 +82,9 @@ if (mongoURI) {
     }
   });
 }
+
+// Start background tasks
+initCleanupTask();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
