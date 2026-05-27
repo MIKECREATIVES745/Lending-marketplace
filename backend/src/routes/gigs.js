@@ -283,6 +283,41 @@ router.post('/:id/confirm', auth, async (req, res) => {
   }
 });
 
+// Raise a dispute
+router.post('/:id/dispute', auth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const gig = await Gig.findById(req.params.id);
+
+    if (!gig) return res.status(404).json({ error: 'Gig not found' });
+    
+    const isPoster = gig.posterId.toString() === req.userId;
+    const isWorker = gig.assignedWorkerId && gig.assignedWorkerId.toString() === req.userId;
+
+    if (!isPoster && !isWorker) {
+      return res.status(403).json({ error: 'Only involved parties can dispute this gig' });
+    }
+
+    gig.status = 'disputed';
+    gig.disputeReason = reason;
+    gig.disputedBy = req.userId;
+    await gig.save();
+
+    // Notify Admin (Simple log for now, or emit to an admin socket room)
+    const { io } = require('../index');
+    if (io) {
+      io.to('admin-room').emit('new-dispute', {
+        gigId: gig._id,
+        reason
+      });
+    }
+
+    res.json({ message: 'Dispute raised. An administrator will review the case.', gig });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Decline a gig application
 router.post('/:id/applicants/:applicantId/decline', auth, async (req, res) => {
   try {
