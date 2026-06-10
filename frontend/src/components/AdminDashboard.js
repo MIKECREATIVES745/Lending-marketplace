@@ -481,9 +481,12 @@ const AdminDashboard = () => {
                       <p className="mb-0">📞 {app.phoneNumber || app.borrowerId?.phone}</p>
                       <small className="text-muted">{app.studentDetails}</small>
                     </td>
-                    <td>
-                      <button className="btn btn-sm btn-primary" onClick={() => window.open(`tel:${app.phoneNumber}`)}>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button className="btn btn-sm btn-primary me-2" onClick={() => window.open(`tel:${app.phoneNumber}`)}>
                         Contact
+                      </button>
+                      <button className="btn btn-sm btn-success" onClick={() => handleApproveBcLoan(app._id)} disabled={bcLoanActionLoading}>
+                        {bcLoanActionLoading ? '...' : 'Approve'}
                       </button>
                     </td>
                   </tr>

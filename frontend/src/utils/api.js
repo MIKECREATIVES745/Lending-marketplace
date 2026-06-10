@@ -41,6 +41,7 @@ export const loanAPI = {
   createLoan: (loanData) => api.post('/loans', loanData),
   applyForBcLoan: (data) => api.post('/loans/bc-apply', data),
   getUserLoans: (userId) => api.get(`/loans/user/${userId}`),
+  approveBcLoan: (loanId) => api.post(`/loans/${loanId}/approve-bc`), // New API for admin approval
   getLoan: (loanId) => api.get(`/loans/${loanId}`),
   acceptLoan: (loanId, data) => api.put(`/loans/${loanId}/accept`, data),
   recordPayment: (loanId, data) => api.post(`/loans/${loanId}/payment`, data),

@@ -1,6 +1,60 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { loanAPI, collateralAPI, gigAPI } from '../utils/api';
 import '../styles/dashboard.css';
+import { Users, DollarSign, Handshake, PiggyBank, Coins } from 'lucide-react'; // Added Coins
+
+const moneyQuotes = [
+  "Wealth is the ability to fully experience life. — Henry David Thoreau",
+  "Money is a tool. Used properly, it makes something; used poorly, it makes a mess.",
+  "The more you learn, the more you earn. — Warren Buffett",
+  "A wise person should have money in their head, but not in their heart. — Jonathan Swift",
+  "Don't stay in bed, unless you can make money in bed. — George Burns",
+  "Investing in yourself is the best investment you will ever make.",
+  "Formal education will make you a living; self-education will make you a fortune. — Jim Rohn",
+  "Price is what you pay. Value is what you get. — Warren Buffett",
+  "The goal isn’t more money. The goal is living life on your terms. — Chris Brogan",
+  "Money is only a tool. It will take you wherever you wish, but it will not replace you as the driver. — Ayn Rand",
+  "Financial peace isn't the acquisition of stuff. It's learning to live on less than you make. — Dave Ramsey",
+  "It’s not how much money you make, but how much money you keep. — Robert Kiyosaki",
+  "The lack of money is the root of all evil. — Mark Twain",
+  "Opportunity is missed by most people because it is dressed in overalls and looks like work. — Thomas Edison",
+  "Never depend on single income. Make investment to create a second source. — Warren Buffett",
+  "Beware of little expenses; a small leak will sink a great ship. — Benjamin Franklin",
+  "Money often costs too much. — Ralph Waldo Emerson",
+  "He who loses money, loses much; He who loses a friend, loses much more; He who loses faith, loses all.",
+  "Wealth consists not in having great possessions, but in having few wants. — Epictetus",
+  "An investment in knowledge pays the best interest. — Benjamin Franklin",
+  "I will tell you the secret to getting rich on Wall Street. You try to be greedy when others are fearful. — Warren Buffett",
+  "Success is not just about what you accomplish in your life; it’s about what you inspire others to do.",
+  "Fortune favors the bold.",
+  "The safe way to double your money is to fold it over once and put it in your pocket. — Kin Hubbard",
+  "Money is like muck—not good unless it be spread. — Francis Bacon",
+  "Time is more value than money. You can get more money, but you cannot get more time. — Jim Rohn",
+  "A penny saved is a penny earned. — Benjamin Franklin",
+  "If you would be wealthy, think of saving as well as getting. — Benjamin Franklin",
+  "The art is not in making money, but in keeping it. — Proverb",
+  "Wealth is like sea-water; the more we drink, the thirstier we become. — Arthur Schopenhauer",
+  "Money is the soul of business.",
+  "Rich people have small TVs and big libraries, and poor people have small libraries and big TVs. — Zig Ziglar",
+  "Every day is a bank account, and time is our currency. No one is rich, no one is poor, we've got 24 hours each.",
+  "To get rich, you have to be making money while you're asleep. — David Bailey",
+  "Empty pockets never held anyone back. Only empty heads and empty hearts can do that. — Norman Vincent Peale",
+  "The financial markets are a device for transferring money from the impatient to the patient. — Warren Buffett",
+  "A simple fact that is hard to learn is that the time to save money is when you have some. — Joe Moore",
+  "Money is power, and you ought to be reasonably ambitious to have it.",
+  "Before you can become a millionaire, you must learn to think like one. — Thomas J. Stanley",
+  "You must gain control over your money or the lack of it will forever control you. — Dave Ramsey",
+  "If you live for having it all, what you have is never enough. — Vicki Robin",
+  "Financial freedom is available to those who learn about it and work for it. — Robert Kiyosaki",
+  "Don't let making a living prevent you from making a life. — John Wooden",
+  "The quickest way to double your money is to fold it in half and put it in your back pocket. — Will Rogers",
+  "Many people take no care of their money till they come nearly to the end of it.",
+  "Money speaks only one language: If you save me today, I will save you tomorrow.",
+  "Your income can grow only to the extent that you do! — T. Harv Eker",
+  "Don't tell me what you value, show me your budget, and I'll tell you what you value. — Joe Biden",
+  "A bank is a place that will lend you money if you can prove that you don’t need it. — Bob Hope",
+  "If you want to know what a man is really like, take notice of how he acts when he loses money. — New England Proverb"
+];
 
 const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
   const [loans, setLoans] = useState([]);
@@ -26,59 +80,6 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
     pendingApplicationsReceived: 0,
     activeJobs: 0
   });
-
-  const moneyQuotes = [
-    "Wealth is the ability to fully experience life. — Henry David Thoreau",
-    "Money is a tool. Used properly, it makes something; used poorly, it makes a mess.",
-    "The more you learn, the more you earn. — Warren Buffett",
-    "A wise person should have money in their head, but not in their heart. — Jonathan Swift",
-    "Don't stay in bed, unless you can make money in bed. — George Burns",
-    "Investing in yourself is the best investment you will ever make.",
-    "Formal education will make you a living; self-education will make you a fortune. — Jim Rohn",
-    "Price is what you pay. Value is what you get. — Warren Buffett",
-    "The goal isn’t more money. The goal is living life on your terms. — Chris Brogan",
-    "Money is only a tool. It will take you wherever you wish, but it will not replace you as the driver. — Ayn Rand",
-    "Financial peace isn't the acquisition of stuff. It's learning to live on less than you make. — Dave Ramsey",
-    "It’s not how much money you make, but how much money you keep. — Robert Kiyosaki",
-    "The lack of money is the root of all evil. — Mark Twain",
-    "Opportunity is missed by most people because it is dressed in overalls and looks like work. — Thomas Edison",
-    "Never depend on single income. Make investment to create a second source. — Warren Buffett",
-    "Beware of little expenses; a small leak will sink a great ship. — Benjamin Franklin",
-    "Money often costs too much. — Ralph Waldo Emerson",
-    "He who loses money, loses much; He who loses a friend, loses much more; He who loses faith, loses all.",
-    "Wealth consists not in having great possessions, but in having few wants. — Epictetus",
-    "An investment in knowledge pays the best interest. — Benjamin Franklin",
-    "I will tell you the secret to getting rich on Wall Street. You try to be greedy when others are fearful. — Warren Buffett",
-    "Success is not just about what you accomplish in your life; it’s about what you inspire others to do.",
-    "Fortune favors the bold.",
-    "The safe way to double your money is to fold it over once and put it in your pocket. — Kin Hubbard",
-    "Money is like muck—not good unless it be spread. — Francis Bacon",
-    "Time is more value than money. You can get more money, but you cannot get more time. — Jim Rohn",
-    "A penny saved is a penny earned. — Benjamin Franklin",
-    "If you would be wealthy, think of saving as well as getting. — Benjamin Franklin",
-    "The art is not in making money, but in keeping it. — Proverb",
-    "Wealth is like sea-water; the more we drink, the thirstier we become. — Arthur Schopenhauer",
-    "Money is the soul of business.",
-    "Rich people have small TVs and big libraries, and poor people have small libraries and big TVs. — Zig Ziglar",
-    "Every day is a bank account, and time is our currency. No one is rich, no one is poor, we've got 24 hours each.",
-    "To get rich, you have to be making money while you're asleep. — David Bailey",
-    "Empty pockets never held anyone back. Only empty heads and empty hearts can do that. — Norman Vincent Peale",
-    "The financial markets are a device for transferring money from the impatient to the patient. — Warren Buffett",
-    "A simple fact that is hard to learn is that the time to save money is when you have some. — Joe Moore",
-    "Money is power, and you ought to be reasonably ambitious to have it.",
-    "Before you can become a millionaire, you must learn to think like one. — Thomas J. Stanley",
-    "You must gain control over your money or the lack of it will forever control you. — Dave Ramsey",
-    "If you live for having it all, what you have is never enough. — Vicki Robin",
-    "Financial freedom is available to those who learn about it and work for it. — Robert Kiyosaki",
-    "Don't let making a living prevent you from making a life. — John Wooden",
-    "The quickest way to double your money is to fold it in half and put it in your back pocket. — Will Rogers",
-    "Many people take no care of their money till they come nearly to the end of it.",
-    "Money speaks only one language: If you save me today, I will save you tomorrow.",
-    "Your income can grow only to the extent that you do! — T. Harv Eker",
-    "Don't tell me what you value, show me your budget, and I'll tell you what you value. — Joe Biden",
-    "A bank is a place that will lend you money if you can prove that you don’t need it. — Bob Hope",
-    "If you want to know what a man is really like, take notice of how he acts when he loses money. — New England Proverb"
-  ];
 
   useEffect(() => {
     // Get a deterministic random quote for the day
@@ -270,7 +271,7 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
         console.error('Error submitting loan application:', error);
         setApplicationMessage({
           type: 'error',
-          text: 'Failed to submit loan application. Please try again.'
+          text: error.response?.data?.error || 'Failed to submit loan application. Please try again.'
         });
       } finally {
         setIsApplying(false);
@@ -399,12 +400,21 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
         </div>
 
         {/* Loan Application Section (formerly Eligibility Section) */}
-        <div className="card eligibility-card mt-4">
-          <h3>ARE YOU IN NEED OF A BC PAYABLE LOAN?</h3>
-          <p>Fill in your details and the amount you need. We will assess your application and provide feedback.</p>
+        <div className="card eligibility-card mt-4 bc-loan-promo-card">
+          <div className="bc-loan-promo-header">
+            <div className="bc-loan-promo-icons">
+              <Users className="floating-icon icon-1" size={50} />
+              <DollarSign className="floating-icon icon-2" size={40} />
+              <Handshake className="floating-icon icon-3" size={45} />
+              <PiggyBank className="floating-icon icon-4" size={35} />
+              <Coins className="floating-icon icon-5" size={30} />
+            </div>
+            <h3 className="promo-title">ARE YOU IN NEED OF A BC PAYABLE LOAN?</h3>
+            <p>Fill in your details and the amount you need. We will assess your application and provide feedback.</p>
+          </div>
           
           {showLoanForm && (
-            <div className="loan-application-form mt-3">
+            <div className="loan-application-form mt-3" style={{ position: 'relative', zIndex: 2 }}>
               <div className="mb-3">
                 <label htmlFor="loanAmount" className="form-label">Loan Amount (ZMW)</label>
                 <input
@@ -445,12 +455,12 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
             </div>
           )}
 
-          <button className="btn btn-primary mt-3" onClick={handleApplyForLoan} disabled={isApplying}>
+          <button className="btn btn-primary mt-3" onClick={handleApplyForLoan} disabled={isApplying} style={{ position: 'relative', zIndex: 2 }}>
             {isApplying ? 'Submitting...' : (showLoanForm ? 'Submit Application' : 'Apply for Loan')}
           </button>
 
           {applicationMessage && (
-            <div className={`mt-3 alert alert-${applicationMessage.type === 'success' ? 'success' : 'danger'}`}>
+            <div className={`mt-3 alert alert-${applicationMessage.type === 'success' ? 'success' : 'danger'}`} style={{ position: 'relative', zIndex: 2 }}>
               {applicationMessage.text}
             </div>
           )}
@@ -467,7 +477,9 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
                     <h4>{loan.purpose || 'UNZA Student Loan'}</h4>
                     <p className="loan-amount">ZMW {loan.amount.toFixed(2)}</p>
                   </div>
-                  <button className="btn btn-secondary">Manage</button>
+                  <button className="btn btn-secondary" onClick={() => setCurrentPage('loans')}>
+                    Manage
+                  </button>
                 </div>
                 <div className="loan-details">
                   <p>📦 Collateral: {loan.collateralValue ? `ZMW ${loan.collateralValue.toFixed(2)}` : 'Not specified'}</p>

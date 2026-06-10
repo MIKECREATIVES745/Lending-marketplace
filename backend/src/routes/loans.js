@@ -1,13 +1,27 @@
 const express = require('express');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
+const User = require('../models/User'); // Import User model for admin check
 const Loan = require('../models/Loan');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
 const PLATFORM_FEE_RATE = parseFloat(process.env.PLATFORM_FEE_RATE || '0.02');
 const PAYMENT_FEE_RATE = parseFloat(process.env.PAYMENT_FEE_RATE || '0.005');
+
+// Middleware to ensure user is an admin
+const requireAdmin = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    req.user = user; // Attach admin user to request
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Admin authorization error' });
+  }
+};
 
 // Create loan request
 router.post('/', async (req, res) => {
@@ -52,11 +66,90 @@ router.post('/bc-apply', auth, async (req, res) => {
       status: 'pending', // Awaiting admin review
       studentDetails: studentDetails, // Ensure your Loan model supports this or use purpose
       phoneNumber: phoneNumber,
-      remainingBalance: parseFloat(amount)
+      remainingBalance: parseFloat(amount),
+      totalRepaid: 0,
+      paymentPlatformFeeTotal: 0,
+      verificationCode: `BC-PENDING-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+      // Initialize these fields to prevent Mongoose validation errors
+      platformFeeRate: PLATFORM_FEE_RATE,
+      paymentFeeRate: PAYMENT_FEE_RATE,
+      platformFeeAmount: 0,
+      lenderReceives: 0,
+      platformRevenue: 0
     });
 
     await loan.save();
     res.status(201).json(loan);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Admin approves a BC Payable Student Loan
+router.post('/:id/approve-bc', auth, requireAdmin, async (req, res) => {
+  try {
+    const loan = await Loan.findById(req.params.id).populate('borrowerId');
+
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan not found' });
+    }
+
+    if (loan.purpose !== "BC Payable Student Loan" || loan.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending BC Payable Loans can be approved' });
+    }
+
+    // Generate unique verification code
+    const verificationCode = crypto.randomBytes(8).toString('hex').toUpperCase();
+
+    // Generate QR Code with loan details
+    const qrData = {
+      loanId: loan.loanId,
+      amount: loan.amount,
+      borrower: loan.borrowerId.firstName + ' ' + loan.borrowerId.lastName,
+      lender: req.user.firstName + ' ' + req.user.lastName, // Admin is the lender for BC loans
+      verificationCode: verificationCode,
+      timestamp: new Date().toISOString()
+    };
+
+    // Generate QR code as data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrData), {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.95,
+      margin: 1,
+      width: 300
+    });
+
+    const platformFeeAmount = loan.amount * (loan.platformFeeRate || PLATFORM_FEE_RATE);
+    const lenderReceives = loan.amount - platformFeeAmount;
+
+    // Update loan status and details
+    loan.status = 'active';
+    loan.lenderId = req.userId; // Admin becomes the lender for this BC loan
+    loan.startDate = new Date();
+    loan.expectedCompletionDate = new Date(Date.now() + loan.loanTerm * 24 * 60 * 60 * 1000);
+    loan.qrCode = qrCodeDataUrl;
+    loan.verificationCode = verificationCode;
+    loan.platformFeeAmount = platformFeeAmount;
+    loan.lenderReceives = lenderReceives;
+    loan.platformRevenue = platformFeeAmount;
+    loan.updatedAt = new Date();
+
+    await loan.save();
+
+    // Emit notification to the borrower
+    const { io } = require('../index');
+    if (io) {
+      io.to(loan.borrowerId._id.toString()).emit('notification', {
+        type: 'BC_LOAN_APPROVED',
+        title: 'BC Payable Loan Approved! 🎉',
+        message: `Your BC Payable Loan for K${loan.amount} has been approved.`,
+        loanId: loan._id,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({ message: 'BC Payable Loan approved successfully', loan });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

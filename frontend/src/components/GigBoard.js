@@ -71,8 +71,8 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
         }
       }
     };
-    loadFullGigDetails();
-  }, [selectedGig?._id]);
+    if (selectedGig) loadFullGigDetails();
+  }, [selectedGig, isPoster]);
 
   useEffect(() => {
     if (initialGigToApply && initialGigToApply._id) {
