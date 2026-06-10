@@ -181,31 +181,6 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
     }
   };
 
-  const handleHireWorker = async (gigId, workerId) => {
-    try {
-      setLoading(true);
-      await gigAPI.hireWorker(gigId, workerId);
-      setMessage('✅ Worker hired successfully! Escrow initiated.');
-      setSelectedGig(null);
-      fetchGigs();
-    } catch (error) {
-      setMessage('❌ Hiring failed: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeclineApplicant = async (gigId, applicantId) => {
-    try {
-      await gigAPI.declineApplication(gigId, applicantId);
-      const res = await gigAPI.getGigById(gigId);
-      setSelectedGig(res.data);
-      setMessage('✅ Application declined');
-    } catch (error) {
-      setMessage('❌ Action failed: ' + (error.response?.data?.error || error.message));
-    }
-  };
-
   const openApplyModal = (gig) => {
     setGigToApply(gig);
     setApplyMessage('');
@@ -673,34 +648,6 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                 <span className="label">Applicants:</span>
                 <span className="value">{selectedGig.applicants?.length || 0}</span>
               </div>
-
-              {/* Applicant Management for Poster */}
-              {isPoster(selectedGig.posterId) && selectedGig.status === 'open' && (
-                <div className="applicants-management-box mt-4 p-4" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '15px' }}>👥 Applicants Management</h4>
-                  {selectedGig.applicants?.length > 0 ? (
-                    <div className="applicants-list mt-2">
-                      {selectedGig.applicants.map(app => (
-                        <div key={app.userId?._id} className="applicant-item p-3 mb-3" style={{ backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{app.userId?.firstName} {app.userId?.lastName}</strong>
-                              <p className="mb-0 small">📞 {app.userId?.phone || 'N/A'} | 📧 {app.userId?.email}</p>
-                              {app.message && <p className="mt-1 font-italic small">"{app.message}"</p>}
-                            </div>
-                            <div className="action-btns">
-                              <button className="btn btn-sm btn-primary" onClick={() => handleHireWorker(selectedGig._id, app.userId?._id)}>Hire</button>
-                              <button className="btn btn-sm btn-outline-danger ml-2" onClick={() => handleDeclineApplicant(selectedGig._id, app.userId?._id)}>Decline</button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted">No one has applied yet.</p>
-                  )}
-                </div>
-              )}
 
               {/* Contact Information (Visible only after hiring) */}
               {(selectedGig.status === 'in-progress' || selectedGig.status === 'payment-pending' || selectedGig.status === 'completed') && (

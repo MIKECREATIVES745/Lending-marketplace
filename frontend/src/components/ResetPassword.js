@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { userAPI } from '../utils/api';
+import PasswordField from './PasswordField';
 import '../styles/auth.css';
 
 const ResetPassword = ({ email, onBack, onResetSuccess }) => {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -93,36 +93,21 @@ const ResetPassword = ({ email, onBack, onResetSuccess }) => {
             />
           </div>
 
-          <div className="form-group">
-            <label>New Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 6 characters, 1 uppercase, 1 number"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="btn-toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-          </div>
+          <PasswordField
+            label="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="At least 6 characters, 1 uppercase, 1 number"
+            disabled={loading}
+          />
 
-          <div className="form-group">
-            <label>Confirm Password</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter your password"
-              disabled={loading}
-            />
-          </div>
+          <PasswordField
+            label="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter your password"
+            disabled={loading}
+          />
 
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}

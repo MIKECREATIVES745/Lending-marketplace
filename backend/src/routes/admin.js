@@ -102,6 +102,20 @@ router.get('/stats', auth, requireAdmin, async (req, res) => {
   }
 });
 
+// Get all pending BC Payable Loan applications
+router.get('/bc-applications', auth, requireAdmin, async (req, res) => {
+  try {
+    const applications = await Loan.find({ 
+      purpose: "BC Payable Student Loan",
+      status: 'pending' 
+    }).populate('borrowerId', 'firstName lastName email phone');
+    
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all Gig Workers for the admin table
 router.get('/workers', auth, requireAdmin, async (req, res) => {
   try {

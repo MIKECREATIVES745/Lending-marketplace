@@ -3,6 +3,7 @@ const QRCode = require('qrcode');
 const crypto = require('crypto');
 const Loan = require('../models/Loan');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
 const PLATFORM_FEE_RATE = parseFloat(process.env.PLATFORM_FEE_RATE || '0.02');
@@ -27,6 +28,33 @@ router.post('/', async (req, res) => {
       remainingBalance: amount
     });
     
+    await loan.save();
+    res.status(201).json(loan);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Apply for a BC Payable Student Loan
+router.post('/bc-apply', auth, async (req, res) => {
+  try {
+    const { amount, studentDetails, phoneNumber } = req.body;
+
+    const loan = new Loan({
+      loanId: `BC-${Date.now()}`,
+      borrowerId: req.userId,
+      amount: parseFloat(amount),
+      interestRate: 0, // BC loans typically have special terms
+      loanTerm: 30,    // Default term
+      paymentPeriod: 30,
+      collateralValue: 0,
+      purpose: "BC Payable Student Loan",
+      status: 'pending', // Awaiting admin review
+      studentDetails: studentDetails, // Ensure your Loan model supports this or use purpose
+      phoneNumber: phoneNumber,
+      remainingBalance: parseFloat(amount)
+    });
+
     await loan.save();
     res.status(201).json(loan);
   } catch (error) {

@@ -11,8 +11,13 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
     interestRate: 8.5
   });
   const [collateralItems, setCollateralItems] = useState([]);
-  const [eligibility, setEligibility] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
+  // Removed eligibility and isChecking states as per new requirements
+  const [showLoanForm, setShowLoanForm] = useState(false);
+  const [loanAmount, setLoanAmount] = useState('');
+  const [studentDetails, setStudentDetails] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(currentUser?.phone || '');
+  const [isApplying, setIsApplying] = useState(false);
+  const [applicationMessage, setApplicationMessage] = useState(null); // { type: 'success' | 'error', text: string }
   const userId = currentUser?.id || currentUser?._id;
 
   const [quickGigs, setQuickGigs] = useState([]);
@@ -185,7 +190,6 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
   ];
 
   const addCollateralItem = async (option) => {
-    setEligibility(null);
     const collateralPayload = {
       userId,
       itemName: option.itemName,
@@ -218,27 +222,62 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
     }
   };
 
-  const handleCheckEligibility = () => {
-    setIsChecking(true);
-    const collateralValue = stats.collateralValue;
-    const hasProfile = Boolean(currentUser?.phone && currentUser?.programOfStudy && currentUser?.computerNumber);
-    const profileScore = hasProfile ? 30 : 10;
-    const collateralScore = Math.min(50, Math.round((collateralValue / 5000) * 50));
-    const loanHistoryScore = loans.length === 0 ? 20 : 10;
-    const totalScore = Math.min(100, profileScore + collateralScore + loanHistoryScore);
-    const eligible = totalScore >= 60 && collateralValue >= 1500;
+  // Renamed and refactored handleCheckEligibility to handleApplyForLoan
+  const handleApplyForLoan = async () => {
+    if (!showLoanForm) {
+      // First click: show the form
+      setShowLoanForm(true);
+      setApplicationMessage(null); // Clear previous messages
+      // Pre-fill student details if available from currentUser
+      setStudentDetails(`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}, Program: ${currentUser?.programOfStudy || ''}, Computer No: ${currentUser?.computerNumber || ''}`.trim());
+      setPhoneNumber(currentUser?.phone || '');
+    } else {
+      // Second click: submit the form
+      if (!loanAmount || isNaN(parseFloat(loanAmount)) || parseFloat(loanAmount) <= 0) {
+        setApplicationMessage({ type: 'error', text: 'Please enter a valid loan amount.' });
+        return;
+      }
+      if (!studentDetails.trim()) {
+        setApplicationMessage({ type: 'error', text: 'Please provide your student details.' });
+        return;
+      }
+      if (!phoneNumber.trim()) {
+        setApplicationMessage({ type: 'error', text: 'Please provide your phone number.' });
+        return;
+      }
 
-    setTimeout(() => {
-      setEligibility({
-        eligible,
-        score: totalScore,
-        message: eligible
-          ? 'Great news! Based on your profile and collateral value, you qualify for a UNZA student loan.'
-          : 'Not yet eligible. Add more collateral or complete your profile to improve your score.'
-      });
-      setIsChecking(false);
-    }, 350);
+      setIsApplying(true);
+      setApplicationMessage(null);
+
+      try {
+        await loanAPI.applyForBcLoan({
+          userId,
+          amount: loanAmount,
+          studentDetails,
+          phoneNumber
+        });
+
+        setApplicationMessage({
+          type: 'success',
+          text: 'Your loan application has been submitted. We will assess it and provide feedback shortly.'
+        });
+        setLoanAmount('');
+        // Optionally clear studentDetails and phoneNumber, or keep pre-filled for convenience
+        // setStudentDetails(''); 
+        // setPhoneNumber(''); 
+        setShowLoanForm(false); // Hide the form after successful submission
+      } catch (error) {
+        console.error('Error submitting loan application:', error);
+        setApplicationMessage({
+          type: 'error',
+          text: 'Failed to submit loan application. Please try again.'
+        });
+      } finally {
+        setIsApplying(false);
+      }
+    }
   };
+
 
   return (
     <div className="dashboard">
@@ -359,18 +398,60 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
           </div>
         </div>
 
-        {/* Eligibility Section */}
+        {/* Loan Application Section (formerly Eligibility Section) */}
         <div className="card eligibility-card mt-4">
-          <h3>Do You Qualify for a UNZA Student Loan?</h3>
-          <p>Find out if you qualify and check your eligibility for a UNZA student loan with our quick assessment.</p>
-          <button className="btn btn-primary" onClick={handleCheckEligibility} disabled={isChecking}>
-            {isChecking ? 'Checking...' : '✓ Check Eligibility'}
+          <h3>ARE YOU IN NEED OF A BC PAYABLE LOAN?</h3>
+          <p>Fill in your details and the amount you need. We will assess your application and provide feedback.</p>
+          
+          {showLoanForm && (
+            <div className="loan-application-form mt-3">
+              <div className="mb-3">
+                <label htmlFor="loanAmount" className="form-label">Loan Amount (ZMW)</label>
+                <input
+                  type="number"
+                  id="loanAmount"
+                  className="form-control"
+                  value={loanAmount}
+                  onChange={(e) => setLoanAmount(e.target.value)}
+                  placeholder="e.g., 500"
+                  min="1"
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="studentDetails" className="form-label">Student Details</label>
+                <textarea
+                  id="studentDetails"
+                  className="form-control"
+                  value={studentDetails}
+                  onChange={(e) => setStudentDetails(e.target.value)}
+                  placeholder="e.g., John Doe, Computer Science, 12345678"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              <div className="mb-3">
+                <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  className="form-control"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="e.g., +260971234567"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          <button className="btn btn-primary mt-3" onClick={handleApplyForLoan} disabled={isApplying}>
+            {isApplying ? 'Submitting...' : (showLoanForm ? 'Submit Application' : 'Apply for Loan')}
           </button>
 
-          {eligibility && (
-            <div className={`eligibility-result ${eligibility.eligible ? 'eligible' : 'not-eligible'}`}>
-              <p><strong>Score:</strong> {eligibility.score}/100</p>
-              <p>{eligibility.message}</p>
+          {applicationMessage && (
+            <div className={`mt-3 alert alert-${applicationMessage.type === 'success' ? 'success' : 'danger'}`}>
+              {applicationMessage.text}
             </div>
           )}
         </div>

@@ -39,6 +39,7 @@ export const userAPI = {
 // Loan APIs
 export const loanAPI = {
   createLoan: (loanData) => api.post('/loans', loanData),
+  applyForBcLoan: (data) => api.post('/loans/bc-apply', data),
   getUserLoans: (userId) => api.get(`/loans/user/${userId}`),
   getLoan: (loanId) => api.get(`/loans/${loanId}`),
   acceptLoan: (loanId, data) => api.put(`/loans/${loanId}/accept`, data),
@@ -114,7 +115,8 @@ export const gigAPI = {
   getMyJobs: () => api.get('/gigs/my-jobs'),
   hireWorker: (gigId, workerId) => api.post(`/gigs/${gigId}/hire`, { workerId }),
   confirmGig: (gigId) => api.post(`/gigs/${gigId}/confirm`),
-  declineApplication: (gigId, applicantId) => api.post(`/gigs/${gigId}/applicants/${applicantId}/decline`)
+  declineApplication: (gigId, applicantId) => api.post(`/gigs/${gigId}/applicants/${applicantId}/decline`),
+  getAdminGigApplications: () => api.get('/gigs/admin/applications')
 };
 
 // Site Content APIs
@@ -126,7 +128,8 @@ export const siteContentAPI = {
 
 export const adminAPI = {
   getSummary: (params = {}) => api.get('/admin/summary', { params }),
-  getTransactions: (params = {}) => api.get('/admin/transactions', { params })
+  getTransactions: (params = {}) => api.get('/admin/transactions', { params }),
+  getBcApplications: () => api.get('/admin/bc-applications')
 };
 
 export default api;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authAPI } from '../utils/api';
+import PasswordField from './PasswordField';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
 import '../styles/auth.css';
@@ -197,20 +198,23 @@ const Login = ({ onLoginSuccess, onAdminLogin }) => {
             <input type="email" name="email" value={formData.email} onChange={handleChange} required />
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-            {isLogin && (
-              <button
-                type="button"
-                className="btn-link"
-                style={{ fontSize: '12px', marginTop: '5px', textAlign: 'right', display: 'block' }}
-                onClick={() => setShowForgotPassword(true)}
-              >
-                Forgot password?
-              </button>
-            )}
-          </div>
+          <PasswordField
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            loading={loading}
+          />
+          {isLogin && (
+            <button
+              type="button"
+              className="btn-link"
+              style={{ fontSize: '12px', marginTop: '-10px', marginBottom: '15px', textAlign: 'right', display: 'block', width: '100%' }}
+              onClick={() => setShowForgotPassword(true)}
+            >
+              Forgot password?
+            </button>
+          )}
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}

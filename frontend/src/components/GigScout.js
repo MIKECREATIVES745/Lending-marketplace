@@ -175,35 +175,6 @@ const GigScout = ({ currentUser, socket }) => {
     }
   };
 
-  const handleHire = async (gigId, workerId) => {
-    try {
-      await gigAPI.hireWorker(gigId, workerId);
-      setMessage('✅ Worker hired! Escrow initiated.');
-      setTimeout(() => setMessage(''), 3000);
-      fetchData();
-    } catch (error) {
-      console.error('Error hiring worker:', error);
-      setMessage('❌ Failed to hire worker: ' + (error.response?.data?.error || error.message));
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  const handleDeclineApplication = async (gigId, applicantId) => {
-    try {
-      setLoading(true);
-      await gigAPI.declineApplication(gigId, applicantId);
-      setMessage('✅ Application declined successfully!');
-      setTimeout(() => setMessage(''), 3000);
-      fetchData();
-    } catch (error) {
-      console.error('Error declining application:', error);
-      setMessage('❌ Failed to decline application: ' + (error.response?.data?.error || error.message));
-      setTimeout(() => setMessage(''), 3000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Check if current user is the poster
   const userId = currentUser?.id || currentUser?._id;
   const isPoster = (poster) => {
@@ -218,24 +189,6 @@ const GigScout = ({ currentUser, socket }) => {
         <h3>My Posted Gigs (As Employer)</h3>
         {myGigs.length > 0 ? myGigs.map(gig => (
           <div key={gig._id} className="job-item card">
-            <div className={`job-status ${gig.status === 'completed' ? 'green' : 'blue'}`}>{gig.status.toUpperCase()}</div>
-            <div className="job-main">
-              <div className="job-info">
-                <h4>{gig.title}</h4>
-                <p>Budget: ZMW {gig.budget} | Escrow: {gig.escrowStatus}</p>
-                {gig.status === 'open' && (
-                  <div className="applicants-list mt-2">
-                    <h5>Applicants ({gig.applicants?.length || 0}):</h5>
-                    {gig.applicants?.map(app => app.userId && (
-                      <div key={app.userId._id || app.userId} className="applicant-item">
-                        <span>{app.userId.firstName || 'User'} {app.userId.lastName || ''}</span><br/>
-                        <small>📞 {app.userId.phone || 'N/A'} | 📧 {app.userId.email || 'N/A'}</small>
-                        <button className="btn btn-small btn-primary" onClick={() => handleHire(gig._id, app.userId._id || app.userId)}>Hire</button>
-                        <button className="btn btn-small btn-outline-danger ml-2" onClick={() => handleDeclineApplication(gig._id, app.userId._id || app.userId)}>Decline</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 {gig.status === 'in-progress' || gig.status === 'payment-pending' ? (
                   <div className="status-actions mt-2">
                     <p>Worker: {gig.assignedWorkerId?.firstName} {gig.assignedWorkerId?.lastName}</p>

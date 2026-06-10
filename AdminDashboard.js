@@ -23,8 +23,6 @@ const AdminDashboard = () => {
   const [lenders, setLenders] = useState([]);
   const [message, setMessage] = useState(''); // For success/error messages
   const [pendingGigApplications, setPendingGigApplications] = useState([]);
-  const [pendingBcLoans, setPendingBcLoans] = useState([]);
-  const [bcLoanActionLoading, setBcLoanActionLoading] = useState(false); // New loading state for BC loans
   const [gigActionLoading, setGigActionLoading] = useState(false);
 
   const fetchAdminData = async (params = {}) => {
@@ -67,20 +65,10 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchBcApplications = async () => {
-    try {
-      const res = await adminAPI.getBcApplications();
-      setPendingBcLoans(res.data);
-    } catch (err) {
-      console.error('Failed to load BC applications:', err);
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
     fetchAdminData();
-    fetchPendingGigApplications();
-    fetchBcApplications();
+    fetchPendingGigApplications(); // Added fetchPendingGigApplications to initial load
   }, []); 
 
   const applyFilters = () => {
@@ -91,40 +79,6 @@ const AdminDashboard = () => {
       }
     });
     fetchAdminData(params);
-  };
-
-  const handleHireWorkerAdmin = async (gigId, workerId) => {
-    setMessage('');
-    if (!window.confirm('Are you sure you want to hire this worker for the gig? This action cannot be undone.')) return;
-    setGigActionLoading(true);
-    try {
-      await gigAPI.hireWorker(gigId, workerId);
-      setMessage('✅ Worker hired successfully! Gig status updated.');
-      fetchPendingGigApplications();
-      fetchAdminData();
-    } catch (error) {
-      setMessage('❌ Failed to hire worker: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setGigActionLoading(false);
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  const handleDeclineApplicantAdmin = async (gigId, applicantId) => {
-    setMessage('');
-    if (!window.confirm('Are you sure you want to decline this applicant? This action cannot be undone.')) return;
-    setGigActionLoading(true);
-    try {
-      await gigAPI.declineApplication(gigId, applicantId);
-      setMessage('✅ Applicant declined successfully!');
-      fetchPendingGigApplications();
-      fetchAdminData();
-    } catch (error) {
-      setMessage('❌ Failed to decline applicant: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setGigActionLoading(false);
-      setTimeout(() => setMessage(''), 3000);
-    }
   };
 
   const prepareChartData = () => {
@@ -445,113 +399,6 @@ const AdminDashboard = () => {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
-
-      {message && <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'}`}>{message}</div>}
-
-      {/* BC Payable Loan Applications */}
-      <div className="card mb-4 mt-4">
-        <div className="section-heading mb-4">
-          <h3>🎓 Pending BC Payable Loan Applications</h3>
-          <p className="text-muted">Review students in need of urgent BC Payable loans.</p>
-        </div>
-
-        {pendingBcLoans.length === 0 ? (
-          <p className="text-muted">No pending BC loan applications.</p>
-        ) : (
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Amount</th>
-                  <th>Contact / Details</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingBcLoans.map((app) => (
-                  <tr key={app._id}>
-                    <td>
-                      <strong>{app.borrowerId?.firstName} {app.borrowerId?.lastName}</strong><br/>
-                      <small>{app.borrowerId?.email}</small>
-                    </td>
-                    <td>ZMW {app.amount?.toFixed(2)}</td>
-                    <td>
-                      <p className="mb-0">📞 {app.phoneNumber || app.borrowerId?.phone}</p>
-                      <small className="text-muted">{app.studentDetails}</small>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-primary" onClick={() => window.open(`tel:${app.phoneNumber}`)}>
-                        Contact
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Pending Gig Applications Section */}
-      <div className="card mb-4 mt-4">
-        <div className="section-heading mb-4">
-          <h3>📋 Pending Gig Applications</h3>
-          <p className="text-muted">Review worker applications and hire the best candidate.</p>
-        </div>
-
-        {pendingGigApplications.length === 0 ? (
-          <p className="text-muted">No pending gig applications for review.</p>
-        ) : (
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Gig Details</th>
-                  <th>Poster</th>
-                  <th>Applicants</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingGigApplications.map((gig) => (
-                  <tr key={gig._id}>
-                    <td>
-                      <strong>{gig.title}</strong><br/>
-                      <small>Budget: ZMW {gig.budget}</small>
-                    </td>
-                    <td>{gig.posterId?.firstName} {gig.posterId?.lastName}</td>
-                    <td>
-                      {gig.applicants.map(app => (
-                        <div key={app.userId?._id} className="p-2 mb-2 border-bottom">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{app.userId?.firstName} {app.userId?.lastName}</strong>
-                              <p className="mb-0 small">📞 {app.userId?.phone || 'N/A'}</p>
-                              {app.message && <p className="mb-0 italic small">"{app.message}"</p>}
-                            </div>
-                            <div className="d-flex gap-2">
-                              <button 
-                                className="btn btn-sm btn-primary" 
-                                onClick={() => handleHireWorkerAdmin(gig._id, app.userId?._id)}
-                                disabled={gigActionLoading}
-                              >Hire</button>
-                              <button 
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => handleDeclineApplicantAdmin(gig._id, app.userId?._id)}
-                                disabled={gigActionLoading}
-                              >Decline</button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
       <div className="card mt-4">

@@ -1,5 +1,6 @@
 const express = require('express');
 const Gig = require('../models/Gig');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
@@ -139,6 +140,28 @@ router.get('/my-jobs', auth, async (req, res) => {
   }
 });
 
+// Get all pending gig applications for admin review
+router.get('/admin/applications', auth, async (req, res) => {
+  try {
+    const adminUser = await User.findById(req.userId);
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const pendingApplications = await Gig.find({
+      status: 'open', // Gigs that are open and have applicants
+      'applicants.0': { '$exists': true } // At least one applicant
+    })
+    .populate('posterId', 'firstName lastName profileImage email phone')
+    .populate('applicants.userId', 'firstName lastName profileImage email phone')
+    .sort({ createdAt: -1 });
+
+    res.json(pendingApplications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get a single gig by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -199,9 +222,9 @@ router.post('/:id/hire', auth, async (req, res) => {
     const gig = await Gig.findById(req.params.id);
 
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
-    const posterIdStr = gig.posterId ? gig.posterId.toString() : null;
-    if (posterIdStr !== req.userId) {
-      return res.status(403).json({ error: 'Only the poster can hire workers' });
+    const adminUser = await User.findById(req.userId);
+    if (!adminUser || !adminUser.isAdmin) { // Only admin can hire
+      return res.status(403).json({ error: 'Admin access required' });
     }
 
     gig.assignedWorkerId = workerId;
@@ -324,9 +347,9 @@ router.post('/:id/applicants/:applicantId/decline', auth, async (req, res) => {
     const gig = await Gig.findById(req.params.id);
     if (!gig) return res.status(404).json({ error: 'Gig not found' });
 
-    // Verify poster ownership
-    if (gig.posterId.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Only the gig poster can decline applications' });
+    const adminUser = await User.findById(req.userId);
+    if (!adminUser || !adminUser.isAdmin) { // Only admin can decline applications
+      return res.status(403).json({ error: 'Admin access required' });
     }
 
     const applicantIndex = gig.applicants.findIndex(
