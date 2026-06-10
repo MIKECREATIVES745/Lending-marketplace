@@ -1,36 +1,44 @@
 const nodemailer = require('nodemailer');
 
 /**
- * Reusable transporter instance for better performance in production.
- * Note: For Gmail, ensure you use an "App Password" if 2FA is enabled.
- */
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-/**
  * Utility to send emails using Nodemailer and Gmail
  */
 const sendEmail = async (options) => {
-  // Verify credentials exist before attempting to send
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('X Email Error: EMAIL_USER or EMAIL_PASS environment variables are missing.');
-    throw new Error('Email configuration missing');
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    console.error('❌ EMAIL CONFIG ERROR: EMAIL_USER or EMAIL_PASS is not defined in your .env file.');
+    console.log('DEBUG - Code intended for:', options.email, 'is:', options.subject);
+    return; // Stop execution if config is missing
   }
 
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: emailUser,
+      pass: emailPass, // Must be a 16-character App Password
+    },
+  });
+
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `"Smart Money" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_FROM || `"Smart Money" <${emailUser}>`,
     to: options.email,
     subject: options.subject,
     text: options.message,
     html: options.html,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully:', info.messageId);
+  } catch (error) {
+    console.error('❌ NODEMAILER ERROR:', error.message);
+    throw error;
+  }
 };
 
 module.exports = sendEmail;
