@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to the project.
 
-## Getting Started
+## Getting Started...
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/yourusername/lending-marketplace.git`
