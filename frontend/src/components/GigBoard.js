@@ -55,6 +55,41 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
   const [gigToApply, setGigToApply] = useState(null);
   const [applyMessage, setApplyMessage] = useState('');
   const [applyLoading, setApplyLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleHireWorker = async (gigId, workerId) => {
+    if (!window.confirm('Are you sure you want to hire this worker for this gig?')) return;
+    try {
+      setActionLoading(true);
+      await gigAPI.hireWorker(gigId, workerId);
+      setMessage('✅ Worker hired successfully! The gig is now in progress.');
+      setSelectedGig(null);
+      fetchGigs();
+    } catch (error) {
+      console.error('Error hiring worker:', error);
+      setMessage('❌ Failed to hire worker: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setActionLoading(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleDeclineApplicant = async (gigId, applicantId) => {
+    if (!window.confirm('Are you sure you want to decline this applicant?')) return;
+    try {
+      setActionLoading(true);
+      await gigAPI.declineApplication(gigId, applicantId);
+      setMessage('✅ Applicant declined.');
+      const res = await gigAPI.getGigById(gigId);
+      setSelectedGig(res.data);
+    } catch (error) {
+      console.error('Error declining applicant:', error);
+      setMessage('❌ Failed to decline: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setActionLoading(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
 
   // Fetch full details when a poster selects their own gig to show applicants
   useEffect(() => {
@@ -673,6 +708,45 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                 <h4>Description</h4>
                 <p>{selectedGig.description}</p>
               </div>
+
+              {/* Applicants Management for Poster */}
+              {isPoster(selectedGig.posterId) && selectedGig.status === 'open' && (
+                <div className="applicants-management mt-4">
+                  <h4>👥 Applicants ({selectedGig.applicants?.length || 0})</h4>
+                  {selectedGig.applicants?.length > 0 ? (
+                    <div className="applicants-list mt-2">
+                      {selectedGig.applicants.map(app => (
+                        <div key={app.userId?._id || app.userId} className="applicant-item card p-3 mb-2" style={{ border: '1px solid #e5e7eb' }}>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <strong>{app.userId?.firstName} {app.userId?.lastName}</strong>
+                              {app.message && <p className="mb-0 small italic">"{app.message}"</p>}
+                            </div>
+                            <div className="d-flex gap-2">
+                              <button 
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleHireWorker(selectedGig._id, app.userId?._id || app.userId)}
+                                disabled={actionLoading}
+                              >
+                                Hire
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => handleDeclineApplicant(selectedGig._id, app.userId?._id || app.userId)}
+                                disabled={actionLoading}
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted italic">No applications received yet.</p>
+                  )}
+                </div>
+              )}
 
               {currentUser && !isPoster(selectedGig.posterId) && selectedGig.status === 'open' && (
                 <button 

@@ -1,4 +1,4 @@
-.gig-board-container {
+rs.gig-board-container {
   background: linear-gradient(135deg, #f5f3ff 0%, #f0e7ff 100%);
   min-height: calc(100vh - 120px);
   padding: 2rem;
@@ -509,6 +509,15 @@
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
 }
 
 /* Alert Styles */

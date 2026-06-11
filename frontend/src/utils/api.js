@@ -130,7 +130,17 @@ export const siteContentAPI = {
 export const adminAPI = {
   getSummary: (params = {}) => api.get('/admin/summary', { params }),
   getTransactions: (params = {}) => api.get('/admin/transactions', { params }),
-  getBcApplications: () => api.get('/admin/bc-applications')
+  getBcApplications: () => api.get('/admin/bc-applications'),
+  getAds: () => api.get('/ads'), // This route is for admin to get all ads, including inactive ones
+  createAd: (data) => {
+    if (data instanceof FormData) {
+      return api.post('/ads', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return api.post('/ads', data);
+  },
+  deleteAd: (id) => api.delete(`/ads/${id}`)
 };
 
 export default api;

@@ -22,10 +22,16 @@ const AdminDashboard = () => {
   const [borrowers, setBorrowers] = useState([]);
   const [lenders, setLenders] = useState([]);
   const [message, setMessage] = useState(''); // For success/error messages
-  const [pendingGigApplications, setPendingGigApplications] = useState([]);
   const [pendingBcLoans, setPendingBcLoans] = useState([]);
   const [bcLoanActionLoading, setBcLoanActionLoading] = useState(false); // New loading state for BC loans
-  const [gigActionLoading, setGigActionLoading] = useState(false);
+
+  const [ads, setAds] = useState([]);
+  const [adForm, setAdForm] = useState({
+    title: '',
+    imageFile: null, // Changed from imageUrl to imageFile for upload
+    linkUrl: '',
+    placement: 'sidebar'
+  });
 
   const fetchAdminData = async (params = {}) => {
     setLoading(true);
@@ -58,15 +64,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchPendingGigApplications = async () => {
-    try {
-      const res = await gigAPI.getAdminGigApplications(); // Assuming gigAPI has this method
-      setPendingGigApplications(res.data);
-    } catch (err) {
-      console.error('Failed to load pending gig applications:', err);
-    }
-  };
-
   const fetchBcApplications = async () => {
     try {
       const res = await adminAPI.getBcApplications();
@@ -76,11 +73,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchAds = async () => {
+    try {
+      const res = await adminAPI.getAds(); // Assuming adminAPI has this method
+      setAds(res.data);
+    } catch (err) {
+      console.error('Failed to load ads:', err);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchAdminData();
-    fetchPendingGigApplications();
     fetchBcApplications();
+    fetchAds();
   }, []); 
 
   const applyFilters = () => {
@@ -91,23 +97,6 @@ const AdminDashboard = () => {
       }
     });
     fetchAdminData(params);
-  };
-
-  const handleHireWorkerAdmin = async (gigId, workerId) => {
-    setMessage('');
-    if (!window.confirm('Are you sure you want to hire this worker for the gig? This action cannot be undone.')) return;
-    setGigActionLoading(true);
-    try {
-      await gigAPI.hireWorker(gigId, workerId);
-      setMessage('✅ Worker hired successfully! Gig status updated.');
-      fetchPendingGigApplications();
-      fetchAdminData();
-    } catch (error) {
-      setMessage('❌ Failed to hire worker: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setGigActionLoading(false);
-      setTimeout(() => setMessage(''), 3000);
-    }
   };
 
   const handleApproveBcLoan = async (loanId) => {
@@ -128,21 +117,46 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeclineApplicantAdmin = async (gigId, applicantId) => {
+  const handleCreateAd = async (e) => {
+    e.preventDefault();
     setMessage('');
-    if (!window.confirm('Are you sure you want to decline this applicant? This action cannot be undone.')) return;
-    setGigActionLoading(true);
+    if (!adForm.imageFile) {
+      setMessage('❌ Please upload an image for the advertisement.');
+      return;
+    }
+
     try {
-      await gigAPI.declineApplication(gigId, applicantId);
-      setMessage('✅ Applicant declined successfully!');
-      fetchPendingGigApplications();
-      fetchAdminData();
+      const formData = new FormData();
+      formData.append('title', adForm.title);
+      formData.append('linkUrl', adForm.linkUrl);
+      formData.append('placement', adForm.placement);
+      formData.append('image', adForm.imageFile); // 'image' must match the field name in multer middleware
+      await adminAPI.createAd(formData);
+      setMessage('✅ Advertisement posted successfully!');
+      setAdForm({ title: '', imageFile: null, linkUrl: '', placement: 'sidebar' });
+      fetchAds();
     } catch (error) {
-      setMessage('❌ Failed to decline applicant: ' + (error.response?.data?.error || error.message));
+      setMessage('❌ Failed to post ad: ' + (error.response?.data?.error || error.message));
     } finally {
-      setGigActionLoading(false);
       setTimeout(() => setMessage(''), 3000);
     }
+  };
+
+  const handleDeleteAd = async (adId) => {
+    if (!window.confirm('Are you sure you want to delete this advertisement?')) return;
+    try {
+      await adminAPI.deleteAd(adId);
+      setMessage('✅ Advertisement deleted.');
+      fetchAds();
+    } catch (error) {
+      setMessage('❌ Failed to delete ad: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    setAdForm({ ...adForm, imageFile: e.target.files[0] });
   };
 
   const prepareChartData = () => {
@@ -515,64 +529,97 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Pending Gig Applications Section */}
+      {/* Ads Management Section */}
       <div className="card mb-4 mt-4">
         <div className="section-heading mb-4">
-          <h3>📋 Pending Gig Applications</h3>
-          <p className="text-muted">Review worker applications and hire the best candidate.</p>
+          <h3>📢 Platform Advertisements</h3>
+          <p className="text-muted">Manage the banners and sponsored content shown to users.</p>
         </div>
 
-        {pendingGigApplications.length === 0 ? (
-          <p className="text-muted">No pending gig applications for review.</p>
-        ) : (
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Gig Details</th>
-                  <th>Poster</th>
-                  <th>Applicants</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingGigApplications.map((gig) => (
-                  <tr key={gig._id}>
-                    <td>
-                      <strong>{gig.title}</strong><br/>
-                      <small>Budget: ZMW {gig.budget}</small>
-                    </td>
-                    <td>{gig.posterId?.firstName} {gig.posterId?.lastName}</td>
-                    <td>
-                      {gig.applicants.map(app => (
-                        <div key={app.userId?._id} className="p-2 mb-2 border-bottom">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{app.userId?.firstName} {app.userId?.lastName}</strong>
-                              <p className="mb-0 small">📞 {app.userId?.phone || 'N/A'}</p>
-                              {app.message && <p className="mb-0 italic small">"{app.message}"</p>}
-                            </div>
-                            <div className="d-flex gap-2">
-                              <button 
-                                className="btn btn-sm btn-primary" 
-                                onClick={() => handleHireWorkerAdmin(gig._id, app.userId?._id)}
-                                disabled={gigActionLoading}
-                              >Hire</button>
-                              <button 
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => handleDeclineApplicantAdmin(gig._id, app.userId?._id)}
-                                disabled={gigActionLoading}
-                              >Decline</button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="grid" style={{ gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+          {/* New Ad Form */}
+          <div className="ad-form-section">
+            <h4>Post New Ad</h4>
+            <form onSubmit={handleCreateAd} className="mt-3">
+              <div className="form-group mb-2">
+                <label>Ad Title</label>
+                <input 
+                  type="text" 
+                  value={adForm.title} 
+                  onChange={(e) => setAdForm({...adForm, title: e.target.value})} 
+                  placeholder="e.g. 50% Off Tuition Help"
+                  required
+                />
+              </div>
+              <div className="form-group mb-2">
+                <label>Ad Image *</label>
+                <input 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  required
+                />
+                {adForm.imageFile && <small className="text-muted">Selected: {adForm.imageFile.name}</small>}
+                />
+              </div>
+              <div className="form-group mb-2">
+                <label>Target Link (URL)</label>
+                <input 
+                  type="text" 
+                  value={adForm.linkUrl} 
+                  onChange={(e) => setAdForm({...adForm, linkUrl: e.target.value})} 
+                  placeholder="https://example.com/landing-page"
+                  required
+                />
+              </div>
+              <div className="form-group mb-3">
+                <label>Placement</label>
+                <select 
+                  value={adForm.placement} 
+                  onChange={(e) => setAdForm({...adForm, placement: e.target.value})}
+                >
+                  <option value="sidebar">Sidebar</option>
+                  <option value="top">Top Banner</option>
+                  <option value="bottom">Bottom Banner</option>
+                  <option value="popup">Popup</option>
+                </select>
+              </div>
+              <button type="submit" className="btn btn-primary btn-full">Post Ad</button>
+            </form>
           </div>
-        )}
+
+          {/* Active Ads List */}
+          <div className="active-ads-list">
+            <h4>Active Ads ({ads.length})</h4>
+            <div className="admin-table-container mt-3">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Preview</th>
+                    <th>Image</th>
+                    <th>Placement</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ads.map(ad => (
+                    <tr key={ad._id}>
+                      <td>
+                        {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', marginRight: '10px' }} />}
+                        <strong>{ad.title}</strong><br/>
+                        <small className="text-muted">{ad.linkUrl}</small>
+                      </td>
+                      <td>{ad.placement}</td>
+                      <td>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAd(ad._id)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card mt-4">
