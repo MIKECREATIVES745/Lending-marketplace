@@ -57,6 +57,33 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
   const [applyLoading, setApplyLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Fetch gigs with filters
+  const fetchGigs = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        ...filters,
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radius: Number(filters.radius)  // Ensure radius is a number
+      };
+      
+      // Remove empty values
+      Object.keys(params).forEach(key => !params[key] && delete params[key]);
+      
+      const response = await gigAPI.searchGigs(params);
+      // Handle different response structures
+      const gigsData = response.data?.data || response.data || [];
+      setGigs(Array.isArray(gigsData) ? gigsData : []);
+    } catch (error) {
+      console.error('Error fetching gigs:', error);
+      setGigs([]);
+      alert('Failed to load gigs');
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, userLocation]);
+
   const handleHireWorker = async (gigId, workerId) => {
     if (!window.confirm('Are you sure you want to hire this worker for this gig?')) return;
     try {
@@ -109,6 +136,33 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
     if (selectedGig) loadFullGigDetails();
   }, [selectedGig, isPoster]);
 
+  // Real-time notification listener to alert user instantly
+  useEffect(() => {
+    const userId = currentUser?.id || currentUser?._id;
+    if (!socket || !userId) return;
+
+    socket.emit('join-user-room', userId);
+
+    const handleNotification = (notif) => {
+      // Play sound effect
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(e => console.log('Audio error:', e));
+      } catch (err) {}
+
+      // Refresh data if notification is gig-related
+      if (['GIG_APPLICATION', 'GIG_APPLICATION_ACCEPTED', 'GIG_CONFIRMATION', 'GIG_APPLICATION_DECLINED'].includes(notif.type)) {
+        fetchGigs();
+        // Show a local message/toast to alert user instantly
+        setMessage(`🔔 ${notif.title}: ${notif.message}`);
+        setTimeout(() => setMessage(''), 6000);
+      }
+    };
+
+    socket.on('notification', handleNotification);
+    return () => socket.off('notification', handleNotification);
+  }, [socket, currentUser, fetchGigs]);
+
   useEffect(() => {
     if (initialGigToApply && initialGigToApply._id) {
       setGigToApply(initialGigToApply);
@@ -138,33 +192,6 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
       );
     }
   }, []);
-
-  // Fetch gigs with filters
-  const fetchGigs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = {
-        ...filters,
-        lat: userLocation.lat,
-        lng: userLocation.lng,
-        radius: Number(filters.radius)  // Ensure radius is a number
-      };
-      
-      // Remove empty values
-      Object.keys(params).forEach(key => !params[key] && delete params[key]);
-      
-      const response = await gigAPI.searchGigs(params);
-      // Handle different response structures
-      const gigsData = response.data?.data || response.data || [];
-      setGigs(Array.isArray(gigsData) ? gigsData : []);
-    } catch (error) {
-      console.error('Error fetching gigs:', error);
-      setGigs([]);
-      alert('Failed to load gigs');
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, userLocation]);
 
   useEffect(() => {
     // Only fetch if location is not default (meaning it was updated or we should use default)

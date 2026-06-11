@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminAPI, userAPI, gigAPI } from '../utils/api'; // Added gigAPI
+import { adminAPI, userAPI } from '../utils/api';
 import { 
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
