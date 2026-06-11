@@ -167,6 +167,62 @@
   padding: 2rem;
 }
 
+.bc-loan-promo-card {
+  background: linear-gradient(135deg, #bae6fd 0%, #f0f9ff 50%, #7dd3fc 100%) !important;
+  border: 2px solid #38bdf8 !important;
+  border-left: 6px solid #06b6d4 !important;
+  box-shadow: 0 10px 25px rgba(186, 230, 253, 0.5) !important;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.bc-loan-promo-header {
+  position: relative;
+  z-index: 2;
+}
+
+.promo-title {
+  color: #0c4a6e !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bc-loan-promo-icons {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.floating-icon {
+  position: absolute;
+  color: #0369a1;
+}
+
+.icon-1 { top: 10%; left: 5%; }
+.icon-2 { top: 60%; left: 15%; }
+.icon-3 { top: 20%; right: 10%; }
+.icon-4 { bottom: 10%; right: 20%; }
+.icon-5 { top: 50%; right: 40%; }
+
+.eligibility-card p {
+  color: #334155;
+  font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
 .eligibility-card h3 {
   color: var(--gray-900);
   margin-bottom: 1rem;

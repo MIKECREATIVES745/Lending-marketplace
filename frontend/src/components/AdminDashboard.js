@@ -110,6 +110,24 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleApproveBcLoan = async (loanId) => {
+    setMessage('');
+    if (!window.confirm('Are you sure you want to approve this BC Payable loan?')) return;
+    setBcLoanActionLoading(true);
+    try {
+      // Assuming adminAPI has an approveBcLoan method
+      await adminAPI.approveBcLoan(loanId); 
+      setMessage('✅ BC Loan approved successfully!');
+      fetchBcApplications();
+      fetchAdminData();
+    } catch (error) {
+      setMessage('❌ Failed to approve loan: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setBcLoanActionLoading(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   const handleDeclineApplicantAdmin = async (gigId, applicantId) => {
     setMessage('');
     if (!window.confirm('Are you sure you want to decline this applicant? This action cannot be undone.')) return;

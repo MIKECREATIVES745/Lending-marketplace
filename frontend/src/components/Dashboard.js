@@ -285,14 +285,15 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
       <div className="container">
         {/* Money Quote Bubble */}
         <div className="money-quote-bubble mb-4" style={{
-          background: '#f3f4f6',
-          borderRadius: '30px 30px 30px 5px',
+          background: 'linear-gradient(135deg, #7dd3fc 0%, #e0f2fe 100%)',
+          borderRadius: '25px',
           padding: '25px',
-          color: '#374151',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          color: '#075985',
+          boxShadow: '0 10px 30px rgba(125, 211, 252, 0.5)',
           position: 'relative',
           animation: 'float 3s ease-in-out infinite',
-          border: '1px solid #e5e7eb'
+          border: '2px solid #7dd3fc',
+          textAlign: 'center'
         }}>
           <div style={{ fontSize: '24px', marginBottom: '10px' }}>💡 Daily Wealth Tip</div>
           <p style={{ fontSize: '18px', fontWeight: '500', fontStyle: 'italic', margin: 0, lineHeight: '1.4' }}>
@@ -336,18 +337,25 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
         </div>
 
         {/* Gig Application Summary */}
-        <div className="card mt-3" style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-          <div className="d-flex justify-content-between align-items-center p-2">
-            <div className="ps-2">
-              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>🛠️ Activity Summary</h4>
-              <p className="text-muted mb-0" style={{ fontSize: '13px' }}>Real-time overview of your campus work</p>
+        <div className="card mt-3" style={{ 
+          borderRadius: '20px', 
+          border: '1px solid #bae6fd', 
+          boxShadow: '0 10px 25px rgba(186, 230, 253, 0.4)', 
+          background: 'linear-gradient(135deg, #7dd3fc 0%, #e0f2fe 100%)',
+          padding: '25px',
+          textAlign: 'center'
+        }}>
+          <div className="d-flex flex-column align-items-center gap-3">
+            <div>
+              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#075985' }}>🛠️ Activity Summary</h4>
+              <p className="text-muted mb-0" style={{ fontSize: '14px', color: '#0369a1' }}>Real-time overview of your campus work</p>
             </div>
-            <div className="d-flex gap-3 text-center">
-              <div className="summary-stat p-2 px-3" style={{ backgroundColor: '#ecfdf5', borderRadius: '12px' }}>
+            <div className="d-flex gap-4 text-center">
+              <div className="summary-stat p-2 px-4" style={{ backgroundColor: '#ecfdf5', borderRadius: '12px', border: '1px solid #d1fae5' }}>
                 <span style={{ display: 'block', fontSize: '18px', fontWeight: '800', color: '#059669' }}>{gigSummary.pendingApplicationsReceived}</span>
                 <small className="text-muted">New Apps</small>
               </div>
-              <div className="summary-stat p-2 px-3" style={{ backgroundColor: '#f5f3ff', borderRadius: '12px' }}>
+              <div className="summary-stat p-2 px-4" style={{ backgroundColor: '#f5f3ff', borderRadius: '12px', border: '1px solid #ede9fe' }}>
                 <span style={{ display: 'block', fontSize: '18px', fontWeight: '800', color: '#7c3aed' }}>{gigSummary.activeJobs}</span>
                 <small className="text-muted">Active Jobs</small>
               </div>

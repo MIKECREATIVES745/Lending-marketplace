@@ -5,14 +5,25 @@
 }
 
 .lending-header {
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   text-align: center;
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #bae6fd 100%);
+  padding: 60px 30px;
+  border-radius: 20px;
+  border: 1px solid #bae6fd;
+  border-top: 5px solid #0ea5e9;
+  box-shadow: 0 12px 24px rgba(186, 230, 253, 0.5);
+  position: relative;
+  overflow: hidden;
 }
 
 .lending-header h1 {
-  font-size: 32px;
-  color: #5B21B6;
+  font-size: 36px;
+  color: #0c4a6e;
+  color: #0369a1;
   margin-bottom: 10px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .lending-header p {

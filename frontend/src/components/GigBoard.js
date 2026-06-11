@@ -30,11 +30,11 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
   const [selectedGig, setSelectedGig] = useState(null);
   const [userLocation, setUserLocation] = useState({ lat: -15.3941, lng: 28.3297 }); // UNZA default
   const userId = currentUser?.id || currentUser?._id;
-  const isPoster = (poster) => {
+  const isPoster = useCallback((poster) => {
     if (!userId || !poster) return false;
     const posterId = typeof poster === 'string' ? poster : poster._id || poster.id;
     return String(userId) === String(posterId);
-  };
+  }, [userId]);
   const [filters, setFilters] = useState({
     search: '',
     category: '',
