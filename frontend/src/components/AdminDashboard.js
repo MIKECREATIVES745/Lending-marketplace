@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { adminAPI, userAPI } from '../utils/api';
 import { 
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -32,6 +32,10 @@ const AdminDashboard = () => {
     linkUrl: '',
     placement: 'sidebar'
   });
+
+  const [countdown, setCountdown] = useState(0);
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const timerRef = useRef(null);
 
   const fetchAdminData = async (params = {}) => {
     setLoading(true);
@@ -89,6 +93,14 @@ const AdminDashboard = () => {
     fetchAds();
   }, []); 
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+
   const applyFilters = () => {
     const params = {};
     Object.keys(filters).forEach((key) => {
@@ -117,14 +129,10 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleCreateAd = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    if (!adForm.imageFile) {
-      setMessage('❌ Please upload an image for the advertisement.');
-      return;
-    }
-
+  const performAdUpload = async () => {
+    setIsCountingDown(false);
+    setCountdown(0);
+    setMessage('🚀 Uploading advertisement...');
     try {
       const formData = new FormData();
       formData.append('title', adForm.title);
@@ -140,6 +148,39 @@ const AdminDashboard = () => {
     } finally {
       setTimeout(() => setMessage(''), 3000);
     }
+  };
+
+  const handleCreateAd = (e) => {
+    e.preventDefault();
+    setMessage('');
+    if (!adForm.imageFile) {
+      setMessage('❌ Please upload an image for the advertisement.');
+      return;
+    }
+
+    setIsCountingDown(true);
+    setCountdown(60);
+    
+    if (timerRef.current) clearInterval(timerRef.current);
+    
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          performAdUpload();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleCancelAdPost = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setIsCountingDown(false);
+    setCountdown(0);
+    setMessage('🚫 Ad post cancelled.');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const handleDeleteAd = async (adId) => {
@@ -548,6 +589,7 @@ const AdminDashboard = () => {
                   value={adForm.title} 
                   onChange={(e) => setAdForm({...adForm, title: e.target.value})} 
                   placeholder="e.g. 50% Off Tuition Help"
+                  disabled={isCountingDown}
                   required
                 />
               </div>
@@ -557,10 +599,10 @@ const AdminDashboard = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
+                  disabled={isCountingDown}
                   required
                 />
                 {adForm.imageFile && <small className="text-muted">Selected: {adForm.imageFile.name}</small>}
-                />
               </div>
               <div className="form-group mb-2">
                 <label>Target Link (URL)</label>
@@ -569,6 +611,7 @@ const AdminDashboard = () => {
                   value={adForm.linkUrl} 
                   onChange={(e) => setAdForm({...adForm, linkUrl: e.target.value})} 
                   placeholder="https://example.com/landing-page"
+                  disabled={isCountingDown}
                   required
                 />
               </div>
@@ -577,15 +620,57 @@ const AdminDashboard = () => {
                 <select 
                   value={adForm.placement} 
                   onChange={(e) => setAdForm({...adForm, placement: e.target.value})}
+                  disabled={isCountingDown}
                 >
-                  <option value="sidebar">Sidebar</option>
-                  <option value="top">Top Banner</option>
-                  <option value="bottom">Bottom Banner</option>
-                  <option value="popup">Popup</option>
+                  <option value="sidebar">Sidebar Widget (Right Side)</option>
+                  <option value="top">Main Top Banner (Fixed Top)</option>
+                  <option value="bottom">Bottom Floating Ad (Corner)</option>
+                  <option value="popup">Centered Popup Overlay (Overlay)</option>
                 </select>
               </div>
-              <button type="submit" className="btn btn-primary btn-full">Post Ad</button>
+              
+              {isCountingDown ? (
+                <div className="countdown-action-container mt-3">
+                  <div className="progress mb-2" style={{ height: '8px', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated" 
+                      role="progressbar" 
+                      style={{ width: `${(countdown / 60) * 100}%`, backgroundColor: '#8b5cf6', height: '100%', transition: 'width 1s linear' }}
+                    ></div>
+                  </div>
+                  <p className="text-center small mb-2">Posting in <strong>{countdown}s</strong>...</p>
+                  <button type="button" className="btn btn-danger btn-full" onClick={handleCancelAdPost}>Cancel Posting</button>
+                </div>
+              ) : (
+                <button type="submit" className="btn btn-primary btn-full">Post Ad</button>
+              )}
             </form>
+          </div>
+
+          {/* Ad Live Preview Section */}
+          <div className="ad-preview-panel card" style={{ border: '1px dashed #8b5cf6', background: '#f5f3ff', padding: '20px' }}>
+             <h5 className="mb-3">👀 Ad Placement Preview</h5>
+             <p className="small text-muted mb-3">Showing preview for: <strong>{adForm.placement}</strong></p>
+             <div className="preview-container" style={{ minHeight: '180px', border: '2px solid #ddd', borderRadius: '12px', position: 'relative', overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+                {adForm.imageFile ? (
+                  <div className="preview-content">
+                    <img 
+                      src={URL.createObjectURL(adForm.imageFile)} 
+                      alt="Preview" 
+                      style={{ width: '100%', height: '120px', objectFit: 'cover' }} 
+                    />
+                    <div className="p-2">
+                      <h6 className="m-0" style={{ fontSize: '14px', fontWeight: 'bold' }}>{adForm.title || 'Your Ad Title Here'}</h6>
+                      <small className="text-muted">Link: {adForm.linkUrl || 'Not set'}</small>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="d-flex align-items-center justify-content-center flex-grow-1 text-muted">
+                    <p className="m-0">Upload an image to see preview</p>
+                  </div>
+                )}
+             </div>
+             <small className="d-block mt-2 text-muted italic">* Note: This preview is a simulation of the {adForm.placement} layout.</small>
           </div>
 
           {/* Active Ads List */}

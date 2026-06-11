@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { loanAPI, collateralAPI, gigAPI } from '../utils/api';
+import { loanAPI, collateralAPI, gigAPI, adminAPI } from '../utils/api';
 import '../styles/dashboard.css';
 import { Users, DollarSign, Handshake, PiggyBank, Coins } from 'lucide-react'; // Added Coins
 
@@ -80,6 +80,8 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
     pendingApplicationsReceived: 0,
     activeJobs: 0
   });
+  const [activeAds, setActiveAds] = useState([]);
+  const [showFloatingAd, setShowFloatingAd] = useState(true);
 
   useEffect(() => {
     // Get a deterministic random quote for the day
@@ -94,6 +96,15 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
       setQuickGigs(gigsData.slice(0, 3));
     } catch (error) {
       console.error('Error fetching quick gigs:', error);
+    }
+  }, []);
+
+  const fetchAds = useCallback(async () => {
+    try {
+      const res = await adminAPI.getAds();
+      setActiveAds(res.data || []);
+    } catch (error) {
+      console.error('Error fetching ads:', error);
     }
   }, []);
 
@@ -160,8 +171,9 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
       fetchCollateral();
       fetchQuickGigs();
       fetchGigActivitySummary();
+      fetchAds();
     }
-  }, [userId, fetchLoans, fetchCollateral, fetchQuickGigs, fetchGigActivitySummary]);
+  }, [userId, fetchLoans, fetchCollateral, fetchQuickGigs, fetchGigActivitySummary, fetchAds]);
 
   const collateralOptions = [
     {
@@ -282,6 +294,17 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
 
   return (
     <div className="dashboard">
+      {/* Sticky Top Banner Ads */}
+      {activeAds.filter(ad => ad.placement === 'top').map(ad => (
+        <div key={ad._id} className="top-ad-banner" style={{ background: '#8b5cf6', color: '#fff', textAlign: 'center', padding: '12px', position: 'sticky', top: 0, zIndex: 1100, boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+          <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+             <span className="badge bg-white text-primary">NEW</span>
+             {ad.title}
+             <span style={{ fontSize: '12px' }}>Click to learn more ➔</span>
+          </a>
+        </div>
+      ))}
+
       <div className="container">
         {/* Money Quote Bubble */}
         <div className="money-quote-bubble mb-4" style={{
@@ -546,6 +569,43 @@ const Dashboard = ({ currentUser, setCurrentPage, onQuickGigApply }) => {
           </div>
         </div>
       </div>
+
+
+      {/* Centered Popup Overlay Ads */}
+      {showFloatingAd && activeAds.filter(ad => ad.placement === 'popup').map(ad => (
+        <div key={ad._id} className="ad-popup-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="ad-popup-content shadow-lg" style={{ maxWidth: '400px', width: '100%', position: 'relative', animation: 'scaleUp 0.3s ease-out' }}>
+            <button className="btn-close" style={{ position: 'absolute', top: '-45px', right: '0', color: '#fff', border: 'none', background: 'none', fontSize: '28px', cursor: 'pointer' }} onClick={() => setShowFloatingAd(false)}>✕</button>
+            <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <img src={ad.imageUrl} alt={ad.title} style={{ width: '100%', borderRadius: '20px', border: '4px solid #fff', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }} />
+              <div className="p-4 bg-white mt-3" style={{ borderRadius: '15px', textAlign: 'center' }}>
+                <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>{ad.title}</h3>
+                <button className="btn btn-primary w-100">Check it Out</button>
+              </div>
+            </a>
+          </div>
+        </div>
+      ))}
+
+      {/* Bottom Floating Ads (Boomplay Style) */}
+      {showFloatingAd && activeAds.filter(ad => ad.placement === 'bottom').map(ad => (
+        <div key={ad._id} className="floating-ad-overlay" style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000, maxWidth: '280px', animation: 'slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1)' }}>
+          <div className="card shadow-lg p-0 overflow-hidden" style={{ borderRadius: '16px', border: '2px solid #8b5cf6', background: '#fff' }}>
+            <div className="ad-header d-flex justify-content-between align-items-center p-2 px-3 border-bottom">
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#8b5cf6', textTransform: 'uppercase' }}>Promoted</span>
+              <button className="btn-close" style={{ fontSize: '14px', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }} onClick={() => setShowFloatingAd(false)}>✕</button>
+            </div>
+            <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <img src={ad.imageUrl} alt={ad.title} style={{ width: '100%', height: '140px', objectFit: 'cover' }} />
+              <div className="p-3">
+                <h6 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#0f172a' }}>{ad.title}</h6>
+                <p className="text-muted small mb-0">Learn More ➔</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      ))}
+
     </div>
   );
 };

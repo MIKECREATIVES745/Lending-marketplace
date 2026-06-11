@@ -471,3 +471,21 @@
     font-size: 0.85rem;
   }
 }
+
+@keyframes slideUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.top-ad-banner {
+  transition: all 0.3s ease;
+}
+
+.top-ad-banner:hover {
+  background: #7c3aed !important;
+}
