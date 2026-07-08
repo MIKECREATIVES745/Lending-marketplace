@@ -24,6 +24,7 @@ const Login = ({ onLoginSuccess, onAdminLogin }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verificationNotice, setVerificationNotice] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -78,6 +79,11 @@ const Login = ({ onLoginSuccess, onAdminLogin }) => {
 
       if (!isLogin && response.data.needsVerification) {
         setNeedsVerification(true);
+        setVerificationNotice(
+          response.data.verificationCode
+            ? `We could not send the email automatically. Use code ${response.data.verificationCode} if needed.`
+            : 'Please check your email for the verification code.'
+        );
         setLoading(false);
         return;
       }
@@ -101,6 +107,7 @@ const Login = ({ onLoginSuccess, onAdminLogin }) => {
             <p>We've sent a 6-digit code to {formData.email}</p>
           </div>
           {error && <div className="error-message">{error}</div>}
+          {verificationNotice && <div className="success-message" style={{ marginBottom: '12px' }}>{verificationNotice}</div>}
           <form onSubmit={handleVerify}>
             <div className="form-group">
               <label>Verification Code</label>

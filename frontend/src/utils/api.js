@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://smartmoney-h0wa.onrender.com/api';
+const getDefaultApiUrl = () => {
+  if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000/api';
+  }
+  return 'https://smartmoney-h0wa.onrender.com/api';
+};
+
+const API_URL = getDefaultApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,
@@ -141,6 +149,15 @@ export const adminAPI = {
     return api.post('/ads', data);
   },
   deleteAd: (id) => api.delete(`/ads/${id}`)
+};
+
+// Complaint APIs
+export const complaintAPI = {
+  submitComplaint: (data) => api.post('/complaints', data),
+  getMyComplaints: () => api.get('/complaints/my-complaints'),
+  getComplaint: (complaintId) => api.get(`/complaints/${complaintId}`),
+  updateComplaintStatus: (complaintId, data) => api.patch(`/complaints/${complaintId}/status`, data),
+  deleteComplaint: (complaintId) => api.delete(`/complaints/${complaintId}`)
 };
 
 export default api;

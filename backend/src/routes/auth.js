@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const confirmationLink = `${frontendUrl}/verify?email=${encodeURIComponent(user.email)}&code=${verificationCode}`;
 
-    // Send verification email
+    let emailSent = true;
     try {
       await sendEmail({
         email: user.email,
@@ -71,14 +71,15 @@ router.post('/register', async (req, res) => {
       });
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
-      // We don't return error here because the user is still created in DB
-      // In production, you might want to handle this differently
+      emailSent = false;
     }
 
     res.json({
-      message: 'Registration initiated. Please verify your email.',
+      message: emailSent ? 'Registration initiated. Please verify your email.' : 'Registration initiated. We could not send the email automatically, but your verification code is ready to use.',
       email: user.email,
-      needsVerification: true
+      needsVerification: true,
+      verificationCode,
+      emailSent
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

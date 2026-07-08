@@ -560,7 +560,7 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                   disabled
                 />
               </div>
-              <div className="form-actions">
+              <div className="form-actions sticky-actions">
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -570,7 +570,7 @@ const GigBoard = ({ currentUser, setCurrentPage, initialGigToApply, clearInitial
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-lg"
                   onClick={() => handleApplyForGig(gigToApply._id, applyMessage)}
                   disabled={applyLoading || !applyMessage.trim()}
                 >

@@ -102,6 +102,8 @@ app.use('/api/gigs', require('./routes/gigs'));
 app.use('/api/lending', require('./routes/lending'));
 app.use('/api/sitecontent', require('./routes/sitecontent'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/ads', require('./routes/ads'));
+app.use('/api/complaints', require('./routes/complaints'));
 
 // Socket.io for real-time chat and notifications
 io.on('connection', (socket) => {

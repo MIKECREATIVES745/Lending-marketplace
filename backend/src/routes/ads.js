@@ -43,10 +43,20 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Image file is required' });
     }
 
+    const placement = ['sidebar', 'top', 'bottom', 'popup', 'gig-board-top', 'marketplace-sidebar', 'dashboard-banner'].includes(req.body.placement)
+      ? req.body.placement
+      : 'gig-board-top';
+
+    const targetUrl = req.body.targetUrl || req.body.linkUrl || '';
+
     const ad = new Ad({
-      ...req.body,
-      imageUrl: req.file.path // Store the URL from the uploaded file
+      title: req.body.title || 'Untitled Ad',
+      targetUrl,
+      placement,
+      imageUrl: req.file.path || req.file.secure_url,
+      isActive: true
     });
+
     await ad.save();
     res.status(201).json(ad);
   } catch (error) {

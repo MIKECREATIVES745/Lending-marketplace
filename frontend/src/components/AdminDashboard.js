@@ -137,6 +137,7 @@ const AdminDashboard = () => {
       const formData = new FormData();
       formData.append('title', adForm.title);
       formData.append('linkUrl', adForm.linkUrl);
+      formData.append('targetUrl', adForm.linkUrl);
       formData.append('placement', adForm.placement);
       formData.append('image', adForm.imageFile); // 'image' must match the field name in multer middleware
       await adminAPI.createAd(formData);
@@ -692,7 +693,7 @@ const AdminDashboard = () => {
                       <td>
                         {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', marginRight: '10px' }} />}
                         <strong>{ad.title}</strong><br/>
-                        <small className="text-muted">{ad.linkUrl}</small>
+                        <small className="text-muted">{ad.targetUrl || ad.linkUrl || 'No link provided'}</small>
                       </td>
                       <td>{ad.placement}</td>
                       <td>

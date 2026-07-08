@@ -59,6 +59,13 @@ const BottomNav = ({ currentPage, setCurrentPage, currentUser, onLogout, unreadM
         {unreadMessages > 0 && <span className="nav-badge">{unreadMessages}</span>}
       </button>
       <button 
+        className={`nav-item ${currentPage === 'complaints' ? 'active' : ''}`}
+        onClick={() => setCurrentPage('complaints')}
+      >
+        <span className="nav-icon">📋</span>
+        <span className="nav-label">Support</span>
+      </button>
+      <button 
         className={`nav-item ${currentPage === 'profile' ? 'active' : ''}`}
         onClick={() => setCurrentPage('profile')}
       >

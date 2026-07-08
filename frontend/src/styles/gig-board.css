@@ -405,6 +405,21 @@ rs.gig-board-container {
   margin-top: 1rem;
 }
 
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 1rem;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.btn-lg {
+  min-height: 48px;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.16);
+}
+
 .gig-details {
   padding: 1.5rem;
 }

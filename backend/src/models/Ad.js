@@ -6,7 +6,7 @@ const AdSchema = new mongoose.Schema({
   targetUrl: { type: String, required: true }, // Where the ad links to
   placement: { 
     type: String, 
-    enum: ['gig-board-top', 'marketplace-sidebar', 'dashboard-banner'],
+    enum: ['gig-board-top', 'marketplace-sidebar', 'dashboard-banner', 'sidebar', 'top', 'bottom', 'popup'],
     default: 'gig-board-top' 
   },
   isActive: { type: Boolean, default: true },

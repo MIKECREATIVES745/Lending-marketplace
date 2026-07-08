@@ -15,10 +15,19 @@ import LenderOffers from './components/LenderOffers';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsConditions from './components/TermsConditions';
 import AdminDashboard from './components/AdminDashboard';
+import Complaints from './components/Complaints';
 import BottomNav from './components/BottomNav';
 import './styles/index.css';
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+const getDefaultSocketUrl = () => {
+  if (process.env.REACT_APP_SOCKET_URL) return process.env.REACT_APP_SOCKET_URL;
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return 'https://smartmoney-h0wa.onrender.com';
+};
+
+const SOCKET_URL = getDefaultSocketUrl();
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -195,6 +204,7 @@ function App() {
             <p className="text-muted">You do not have permission to view this page.</p>
           </div>
         )}
+        {currentPage === 'complaints' && <Complaints currentUser={currentUser} />}
         {currentPage === 'privacy' && <PrivacyPolicy setCurrentPage={setCurrentPage} />}
         {currentPage === 'terms' && <TermsConditions setCurrentPage={setCurrentPage} />}
       </main>
