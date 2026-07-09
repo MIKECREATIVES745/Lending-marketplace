@@ -1,0 +1,89 @@
+/* Site Pages Styles */
+
+.site-page {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  margin-bottom: 100px;
+}
+
+.site-page .card {
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.site-page h1 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.site-page h2 {
+  color: var(--primary-color);
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-size: 22px;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 10px;
+}
+
+.site-page h3 {
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.site-content {
+  line-height: 1.8;
+  color: #555;
+}
+
+.site-content p {
+  margin-bottom: 15px;
+  text-align: justify;
+}
+
+.site-content ul,
+.site-content ol {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.site-content li {
+  margin-bottom: 8px;
+}
+
+/* Dark Mode */
+body.dark-mode .site-page .card {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+}
+
+body.dark-mode .site-page h1,
+body.dark-mode .site-page h2,
+body.dark-mode .site-page h3 {
+  color: #5B21B6;
+}
+
+body.dark-mode .site-content {
+  color: var(--gray-700);
+}
+
+@media (max-width: 768px) {
+  .site-page {
+    padding: 15px;
+  }
+
+  .site-page .card {
+    padding: 20px;
+  }
+
+  .site-page h1 {
+    font-size: 24px;
+  }
+
+  .site-page h2 {
+    font-size: 20px;
+  }
+}
